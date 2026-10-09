@@ -36,7 +36,12 @@ test('real isolated backend onboarding, resource schedule, policy, availability 
     await onboard.json();
   const apiRequests: string[] = [];
   page.on('request', (request) => apiRequests.push(request.url()));
+  const screenshotDir = process.env['SLOTIX_QA_SCREENSHOT_DIR'];
   await page.goto('/platform/login');
+  if (screenshotDir) {
+    mkdirSync(screenshotDir, { recursive: true });
+    await page.screenshot({ path: join(screenshotDir, 'platform-login.png'), fullPage: true });
+  }
   await page.getByLabel('Correo electrónico').fill(credentials.email);
   await page.locator('#auth-password').fill(credentials.password);
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
@@ -45,9 +50,7 @@ test('real isolated backend onboarding, resource schedule, policy, availability 
     page.getByRole('button', { name: 'Crear compañía con administrador' }),
   ).toBeVisible();
   await page.getByText('Compañías autorizadas', { exact: true }).waitFor();
-  const screenshotDir = process.env['SLOTIX_QA_SCREENSHOT_DIR'];
   if (screenshotDir) {
-    mkdirSync(screenshotDir, { recursive: true });
     await page.screenshot({ path: join(screenshotDir, 'platform-companies.png'), fullPage: true });
   }
   const companyLogin = await request.post(`${base}/users/login`, {
