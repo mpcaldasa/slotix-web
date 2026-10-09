@@ -12,6 +12,8 @@ Use a calm operations workspace: deep navy navigation, an open cool-white work s
 
 The compact calendar-grid mark and the narrow mint selected-navigation rail are functional wayfinding cues. Icons are consistent inline SVGs with accessible names only when they convey meaning; decorative SVGs are hidden from assistive technology.
 
+The access and recovery container sits over a quiet, low-contrast 36px grid that nods to scheduling without competing with form labels or keyboard focus.
+
 ## Tokens and typography
 
 - Runtime tokens and responsive rules live in `src/styles.css`; keep semantic names such as `--accent`, `--ink`, `--paper`, `--line`, `--success`, and `--danger`.
