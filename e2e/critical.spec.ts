@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 const companyId = '11111111-1111-4111-8111-111111111111';
 const userId = '22222222-2222-4222-8222-222222222222';
 const resourceId = '33333333-3333-4333-8333-333333333333';
@@ -75,6 +77,8 @@ test('login validation, keyboard, accessibility and responsive viewport', async 
   ).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await login(page);
+  await expect(page.getByText('COMPAÑÍA', { exact: true })).toBeVisible();
+  await expect(page.getByText('Usuario de compañía', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Miembros', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Políticas', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Cerrar sesión' }).click();
@@ -212,6 +216,20 @@ test('authenticated availability screen and accessible calendar meet automated A
   await page.getByRole('link', { name: 'Calendario', exact: true }).first().click();
   await page.getByRole('dialog').getByRole('button', { name: 'Descartar', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Calendario de reservas' })).toBeVisible();
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Vistas de reservas' })
+      .getByRole('link', { name: 'Calendario' }),
+  ).toHaveAttribute('aria-current', 'page');
+  const screenshotDir = process.env['SLOTIX_GUIDE_SCREENSHOT_DIR'];
+  if (screenshotDir) {
+    mkdirSync(screenshotDir, { recursive: true });
+    const suffix = test.info().project.name === 'mobile' ? '-mobile' : '';
+    await page.screenshot({
+      path: join(screenshotDir, `company-calendar-context${suffix}.png`),
+      fullPage: true,
+    });
+  }
   expect(
     (
       await new AxeBuilder({ page })

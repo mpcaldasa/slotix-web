@@ -46,9 +46,12 @@ function dateOffset(date: string, delta: number): string {
         <h1 tabindex="-1">{{ calendar() ? 'Calendario de reservas' : 'Reservas' }}</h1>
         <p>Fechas y horas en {{ zone }}. El servidor define los estados y permisos vigentes.</p>
       </div>
-      <div class="actions">
-        <a routerLink="/bookings">Lista</a><a routerLink="/calendar">Calendario</a
-        ><a class="button primary" routerLink="/bookings/new">Nueva reserva</a>
+      <div class="actions booking-header-actions">
+        <nav class="view-switcher" aria-label="Vistas de reservas">
+          <a routerLink="/bookings" [attr.aria-current]="calendar() ? null : 'page'">Lista</a>
+          <a routerLink="/calendar" [attr.aria-current]="calendar() ? 'page' : null">Calendario</a>
+        </nav>
+        <a class="button primary" routerLink="/bookings/new">Nueva reserva</a>
       </div>
     </header>
     <app-error [error]="error()" />

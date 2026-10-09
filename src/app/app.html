@@ -112,10 +112,17 @@
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <div class="topbar-context">
-          <span class="context-indicator" aria-hidden="true"></span
-          ><span>{{
-            session.platform() ? 'Administración de plataforma' : 'Gestión de reservas'
+        <div class="topbar-context" role="group" aria-label="Contexto de la sesión">
+          <span class="context-indicator" aria-hidden="true"></span>
+          <span class="context-badge">{{ session.platform() ? 'PLATAFORMA' : 'COMPAÑÍA' }}</span>
+          <span class="context-role">{{
+            session.platform()
+              ? 'Administrador de plataforma'
+              : session.admin()
+                ? 'Administrador de compañía'
+                : session.staff()
+                  ? 'Gestor de reservas'
+                  : 'Usuario de compañía'
           }}</span>
         </div>
         <div class="timezone-chip">
@@ -123,7 +130,11 @@
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2M3.5 9h17M3.5 15h17" />
           </svg>
-          <span>{{ config.companyTimezone }}</span>
+          <span>{{
+            session.platform()
+              ? 'Zona predeterminada: ' + config.companyTimezone
+              : 'Zona de la compañía: ' + config.companyTimezone
+          }}</span>
         </div>
       </header>
       <main id="main" tabindex="-1">
