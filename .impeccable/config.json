@@ -1,0 +1,29 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-10-09T10:32:49.942Z",
+        "reason": "Agent: .error and .notice are semantic feedback containers, not cards; their accent borders distinguish error from informational guidance."
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-10-09T10:32:50.015Z",
+        "reason": "Agent: DESIGN.md documents Arial as the deliberate system body and control font; the stack avoids external font requests."
+      },
+      {
+        "rule": "overused-font",
+        "value": "helvetica",
+        "createdAt": "2026-10-09T10:32:50.090Z",
+        "reason": "Agent: DESIGN.md documents Helvetica as the deliberate system heading font; the stack avoids external font requests."
+      }
+    ]
+  }
+}
