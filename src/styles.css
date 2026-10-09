@@ -904,8 +904,8 @@ pre {
   padding: clamp(1rem, 3vw, 2.5rem);
   background-color: #eef2f6;
   background-image:
-    linear-gradient(#e5ebf1 1px, transparent 1px),
-    linear-gradient(90deg, #e5ebf1 1px, transparent 1px);
+    linear-gradient(#d5dfe9 1px, transparent 1px),
+    linear-gradient(90deg, #d5dfe9 1px, transparent 1px);
   background-position: center;
   background-size: 36px 36px;
 }
