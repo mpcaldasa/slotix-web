@@ -39,7 +39,7 @@ async function mockApi(page: Page, role = 'CUSTOMER') {
 }
 async function login(page: Page) {
   await page.goto('/login');
-  await page.getByLabel('ID de compañía').fill(companyId);
+  await page.getByLabel('Identificador único de tu compañía').fill(companyId);
   await page.getByLabel('Correo electrónico').fill('qa@example.test');
   await page.locator('#auth-password').fill('test-only-password');
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
@@ -61,8 +61,11 @@ test('login validation, keyboard, accessibility and responsive viewport', async 
   });
   expect(loginCenterOffset).toBeLessThan(1);
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
-  await expect(page.getByLabel('ID de compañía')).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.getByLabel('ID de compañía')).toBeFocused();
+  await expect(page.getByLabel('Identificador único de tu compañía')).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+  await expect(page.getByLabel('Identificador único de tu compañía')).toBeFocused();
   expect(
     (
       await new AxeBuilder({ page })

@@ -112,7 +112,9 @@ test('real isolated backend onboarding, resource schedule, policy, availability 
   expect(availability.ok()).toBe(true);
   expect((await availability.json()).length).toBeGreaterThan(0);
   await page.goto('/login');
-  await page.getByLabel('ID de compañía').fill(identity.company.id);
+  if (screenshotDir)
+    await page.screenshot({ path: join(screenshotDir, 'company-login.png'), fullPage: true });
+  await page.getByLabel('Identificador único de tu compañía').fill(identity.company.id);
   await page.getByLabel('Correo electrónico').fill(email);
   await page.locator('#auth-password').fill(password);
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
