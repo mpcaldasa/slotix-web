@@ -109,7 +109,9 @@ function dateOffset(date: string, delta: number): string {
                     </td>
                     <td>{{ resourceName(booking.resourceId) }}</td>
                     <td>
-                      <span class="status-pill">{{ label(booking.status) }}</span>
+                      <span class="status-pill" [attr.data-status]="booking.status">{{
+                        label(booking.status)
+                      }}</span>
                     </td>
                   </tr>
                 }
@@ -148,7 +150,9 @@ function dateOffset(date: string, delta: number): string {
                     </td>
                     <td>{{ resourceName(booking.resourceId) }}</td>
                     <td>
-                      <span class="status-pill">{{ label(booking.status) }}</span>
+                      <span class="status-pill" [attr.data-status]="booking.status">{{
+                        label(booking.status)
+                      }}</span>
                     </td>
                     <td><a [routerLink]="['/bookings', booking.id]">Ver detalle</a></td>
                   </tr>
@@ -505,7 +509,9 @@ export class BookingCreatePage {
           <div>
             <dt>Estado</dt>
             <dd>
-              <span class="status-pill">{{ label(item.status) }}</span>
+              <span class="status-pill" [attr.data-status]="item.status">{{
+                label(item.status)
+              }}</span>
             </dd>
           </div>
           <div>

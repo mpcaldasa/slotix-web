@@ -2,42 +2,129 @@
 @if (session.identity(); as identity) {
   <div class="app-shell">
     <aside class="sidebar" aria-label="Navegación principal">
-      <a class="brand" [routerLink]="session.platform() ? '/platform/companies' : '/bookings'"
-        >slotix<span class="brand-dot"></span
-      ></a>
-      <p class="workspace-label">{{ session.platform() ? 'Plataforma' : 'Espacio de compañía' }}</p>
-      <nav>
+      <a class="brand" [routerLink]="session.platform() ? '/platform/companies' : '/bookings'">
+        <svg class="brand-symbol" aria-hidden="true" viewBox="0 0 32 32" fill="none">
+          <path d="M5 7.5h22v17H5z" stroke="currentColor" stroke-width="1.7" />
+          <path d="M5 13h22M11 7.5v17M21 7.5v17" stroke="currentColor" stroke-width="1.4" />
+          <path d="M12 16h3v3h-3zM22 16h3v3h-3z" fill="currentColor" />
+        </svg>
+        <span>slotix</span>
+      </a>
+      <div class="nav-context">
+        <span class="context-kicker">Espacio de trabajo</span>
+        <span class="context-name">{{ session.platform() ? 'Plataforma' : 'Compañía' }}</span>
+      </div>
+      <nav class="primary-nav" aria-label="Secciones">
+        <span class="nav-section-label">{{
+          session.platform() ? 'Administración' : 'Agenda'
+        }}</span>
         @if (session.platform()) {
-          <a routerLink="/platform/companies" routerLinkActive="active">Compañías</a
-          ><a routerLink="/platform/users" routerLinkActive="active">Usuarios globales</a
-          ><a routerLink="/operations" routerLinkActive="active">Operaciones</a>
+          <a routerLink="/platform/companies" routerLinkActive="active">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M4 21V7l8-4 8 4v14M2 21h20M9 21v-6h6v6M8 9h.01M12 9h.01M16 9h.01" />
+            </svg>
+            <span>Compañías</span>
+          </a>
+          <a routerLink="/platform/users" routerLinkActive="active">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 8h5m-2.5-2.5v5"
+              />
+            </svg>
+            <span>Usuarios globales</span>
+          </a>
+          <a routerLink="/operations" routerLinkActive="active">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M3 3v18h18M7 14l4-4 3 3 6-7M16 6h4v4" />
+            </svg>
+            <span>Operaciones</span>
+          </a>
         } @else {
-          <a routerLink="/bookings" routerLinkActive="active">Reservas</a
-          ><a routerLink="/calendar" routerLinkActive="active">Calendario</a
-          ><a routerLink="/resources" routerLinkActive="active">Recursos</a>
+          <a routerLink="/bookings" routerLinkActive="active">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M8 3v3m8-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1ZM8 13h3v3H8zM14 13h3"
+              />
+            </svg>
+            <span>Reservas</span>
+          </a>
+          <a routerLink="/calendar" routerLinkActive="active">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M8 3v3m8-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1ZM8 13h2m4 0h2M8 17h2m4 0h2"
+              />
+            </svg>
+            <span>Calendario</span>
+          </a>
+          <a routerLink="/resources" routerLinkActive="active">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M2 21h20M8 7h2m4 0h2m-8 4h2m4 0h2m-6 10v-5h4v5"
+              />
+            </svg>
+            <span>Recursos</span>
+          </a>
           @if (session.admin()) {
-            <a routerLink="/members" routerLinkActive="active">Miembros</a
-            ><a routerLink="/policies" routerLinkActive="active">Políticas</a>
+            <span class="nav-section-label nav-section-spaced">Administración</span>
+            <a routerLink="/members" routerLinkActive="active">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 8h5m-2.5-2.5v5"
+                />
+              </svg>
+              <span>Miembros</span>
+            </a>
+            <a routerLink="/policies" routerLinkActive="active">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path d="m12 3 8 3v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3ZM9 12l2 2 4-4" />
+              </svg>
+              <span>Políticas</span>
+            </a>
           }
         }
       </nav>
       <div class="identity">
-        <small>Identidad autorizada</small><code>{{ identity.userId }}</code>
-        @for (role of identity.roles; track role) {
-          <span>{{ label(role) }}</span>
-        }
-        @if (identity.companyId) {
-          <small>Compañía</small><code>{{ identity.companyId }}</code>
-        }
-        <button type="button" (click)="logout()">Cerrar sesión</button>
+        <div class="identity-role">
+          <span class="identity-avatar" aria-hidden="true">{{
+            label(identity.roles[0] ?? 'CUSTOMER').slice(0, 1)
+          }}</span>
+          <span
+            ><small>Sesión activa</small>
+            @for (role of identity.roles; track role) {
+              <strong>{{ label(role) }}</strong>
+            }
+          </span>
+        </div>
+        <details class="identity-details">
+          <summary>Datos de acceso</summary>
+          <small>Usuario</small><code>{{ identity.userId }}</code>
+          @if (identity.companyId) {
+            <small>Compañía autorizada</small><code>{{ identity.companyId }}</code>
+          }
+        </details>
+        <button type="button" class="logout-button" (click)="logout()">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+            <path d="M10 17l5-5-5-5m5 5H3m9-9h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" />
+          </svg>
+          Cerrar sesión
+        </button>
       </div>
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <span>{{
-          session.platform() ? 'Administración de plataforma' : 'Gestión de reservas'
-        }}</span
-        ><span class="muted">{{ config.companyTimezone }}</span>
+        <div class="topbar-context">
+          <span class="context-indicator" aria-hidden="true"></span
+          ><span>{{
+            session.platform() ? 'Administración de plataforma' : 'Gestión de reservas'
+          }}</span>
+        </div>
+        <div class="timezone-chip">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2M3.5 9h17M3.5 15h17" />
+          </svg>
+          <span>{{ config.companyTimezone }}</span>
+        </div>
       </header>
       <main id="main" tabindex="-1">
         <div role="status" class="feedback" [class.visible]="feedback.message()">

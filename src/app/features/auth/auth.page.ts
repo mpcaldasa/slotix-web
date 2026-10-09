@@ -12,16 +12,50 @@ import { AuthService } from './auth.service';
   imports: [RouterLink, EditorComponent, ErrorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <div class="auth-layout">
-    <section class="auth-story">
-      <a class="brand" routerLink="/login">slotix<span class="brand-dot"></span></a>
-      <div>
+    <section class="auth-story" aria-label="Slotix, plataforma de reservas">
+      <a class="brand" routerLink="/login">
+        <svg class="brand-symbol" aria-hidden="true" viewBox="0 0 32 32" fill="none">
+          <path d="M5 7.5h22v17H5z" stroke="currentColor" stroke-width="1.7" />
+          <path d="M5 13h22M11 7.5v17M21 7.5v17" stroke="currentColor" stroke-width="1.4" />
+          <path d="M12 16h3v3h-3zM22 16h3v3h-3z" fill="currentColor" />
+        </svg>
+        <span>slotix</span>
+      </a>
+      <div class="auth-story-main">
         <p class="eyebrow">Reservas con contexto</p>
-        <h2>Un lugar para<br />coordinar tus recursos.</h2>
+        <h2>El espacio que necesitas,<br /><em>cuando lo necesitas.</em></h2>
         <p>
-          Salas, canchas, equipos, vehículos, personas y servicios. Cada reserva, en su compañía.
+          Una agenda para coordinar salas, canchas, equipos, vehículos, personas y servicios dentro
+          de tu compañía.
         </p>
+        <svg class="schedule-art" aria-hidden="true" viewBox="0 0 440 190" fill="none">
+          <rect
+            x="1"
+            y="1"
+            width="438"
+            height="188"
+            rx="14"
+            stroke="currentColor"
+            stroke-opacity=".2"
+          />
+          <path
+            d="M82 1v188M171 1v188M260 1v188M349 1v188M1 48h438M1 95h438M1 142h438"
+            stroke="currentColor"
+            stroke-opacity=".16"
+          />
+          <rect x="96" y="16" width="62" height="25" rx="6" fill="#9BE2C2" />
+          <rect x="185" y="61" width="150" height="25" rx="6" fill="#FFB28D" />
+          <rect x="14" y="108" width="151" height="25" rx="6" fill="#B5C7FF" />
+          <rect x="274" y="155" width="151" height="20" rx="6" fill="#9BE2C2" />
+          <circle cx="27" cy="24" r="4" fill="#F7C767" />
+          <circle cx="27" cy="71" r="4" fill="#F7C767" />
+          <circle cx="27" cy="118" r="4" fill="#F7C767" />
+          <circle cx="27" cy="165" r="4" fill="#F7C767" />
+        </svg>
       </div>
-      <small>Acceso por identidad y compañía</small>
+      <div class="auth-story-footer">
+        <span>Una sola agenda</span><span aria-hidden="true"></span><span>Tu compañía</span>
+      </div>
     </section>
     <section class="auth-panel">
       <h1 tabindex="-1">{{ title }}</h1>
