@@ -1,0 +1,53 @@
+<a class="skip-link" href="#main">Saltar al contenido</a>
+@if (session.identity(); as identity) {
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <a class="brand" [routerLink]="session.platform() ? '/platform/companies' : '/bookings'"
+        >slotix<span class="brand-dot"></span
+      ></a>
+      <p class="workspace-label">{{ session.platform() ? 'Plataforma' : 'Espacio de compañía' }}</p>
+      <nav>
+        @if (session.platform()) {
+          <a routerLink="/platform/companies" routerLinkActive="active">Compañías</a
+          ><a routerLink="/platform/users" routerLinkActive="active">Usuarios globales</a
+          ><a routerLink="/operations" routerLinkActive="active">Operaciones</a>
+        } @else {
+          <a routerLink="/bookings" routerLinkActive="active">Reservas</a
+          ><a routerLink="/calendar" routerLinkActive="active">Calendario</a
+          ><a routerLink="/resources" routerLinkActive="active">Recursos</a>
+          @if (session.admin()) {
+            <a routerLink="/members" routerLinkActive="active">Miembros</a
+            ><a routerLink="/policies" routerLinkActive="active">Políticas</a>
+          }
+        }
+      </nav>
+      <div class="identity">
+        <small>Identidad autorizada</small><code>{{ identity.userId }}</code>
+        @for (role of identity.roles; track role) {
+          <span>{{ label(role) }}</span>
+        }
+        @if (identity.companyId) {
+          <small>Compañía</small><code>{{ identity.companyId }}</code>
+        }
+        <button type="button" (click)="logout()">Cerrar sesión</button>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <span>{{
+          session.platform() ? 'Administración de plataforma' : 'Gestión de reservas'
+        }}</span
+        ><span class="muted">{{ config.companyTimezone }}</span>
+      </header>
+      <main id="main" tabindex="-1">
+        <div role="status" class="feedback" [class.visible]="feedback.message()">
+          {{ feedback.message() }}
+        </div>
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+} @else {
+  <main id="main" tabindex="-1" class="public-main"><router-outlet /></main>
+}
+<app-dialog />

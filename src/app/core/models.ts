@@ -1,0 +1,36 @@
+import type { components } from './openapi';
+export type Schema<N extends keyof components['schemas']> = components['schemas'][N];
+export type Complete<N extends keyof components['schemas']> = Required<Schema<N>>;
+export type Resource = Complete<'ResourceResponse'>;
+export type Booking = Complete<'BookingResponse'>;
+export type Policy = Complete<'BookingPolicyResponse'>;
+export type Membership = Complete<'MembershipResponse'>;
+export type Company = Complete<'CompanyResponse'>;
+export type PlatformUser = Complete<'PlatformUserResponse'>;
+export type Rule = Complete<'AvailabilityRuleResponse'>;
+export type Block = Complete<'ResourceBlockResponse'>;
+export type Assignment = Complete<'ResourcePolicyResponse'>;
+export type Slot = Complete<'AvailabilitySlot'>;
+export type AuditEntry = Complete<'AuditEntryResponse'>;
+export type Delivery = Complete<'NotificationDeliveryResponse'>;
+export type Page<T> = {
+  items: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
+export type Role = 'PLATFORM_ADMIN' | 'COMPANY_ADMIN' | 'BOOKING_MANAGER' | 'CUSTOMER';
+export type CompanyRole = Exclude<Role, 'PLATFORM_ADMIN'>;
+export type BookingStatus = Booking['status'];
+export type ResourceInput = Schema<'CreateResourceRequest'>;
+export type PolicyInput = Schema<'CreateBookingPolicyRequest'>;
+export type RuleInput = components['schemas']['CreateAvailabilityRuleRequest'];
+export type BlockInput = Schema<'CreateResourceBlockRequest'>;
+export type BookingInput = components['schemas']['CreateBookingRequest'];
+export type ApiError = {
+  status: number;
+  code: string;
+  error: string;
+  fields: Record<string, string>;
+};
