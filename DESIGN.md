@@ -80,7 +80,7 @@ Slotix is an operational tool for company staff and a platform console for platf
 
 The palette pairs a cool near-white work surface with deep ink, calendar blue, and a green availability signal. Fira Sans is used for interface text and headings; Fira Code is reserved for technical identifiers. Both font families are bundled locally so the browser makes no third-party font requests. Table rows, filters, and schedule states stay quiet enough to scan quickly.
 
-The access and recovery container sits over a low-contrast 36px grid. It adds a quiet scheduling cue around the sign-in surface while keeping the form and its focus states visually dominant.
+The access and recovery container sits over a low-contrast 36px grid. It adds a quiet scheduling cue around the sign-in surface while keeping the form and its focus states visually dominant. The routed auth host spans the available grid cell and centers the sign-in card against the viewport, including on the separate platform login route.
 
 ## Colors
 

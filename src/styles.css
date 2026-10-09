@@ -920,6 +920,12 @@ pre {
   background-size: 36px 36px;
 }
 
+.public-main > app-auth-page {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
 .auth-layout {
   display: grid;
   width: min(1120px, 100%);
