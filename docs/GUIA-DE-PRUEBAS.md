@@ -142,10 +142,11 @@ No existe búsqueda de miembros. Los gestores solo pueden reservar a otra person
 1. Ve a **Recursos** y pulsa **Crear recurso**.
 2. Completa nombre, descripción opcional, tipo (`SPACE`, `PERSON`, `EQUIPMENT`, `SERVICE_RESOURCE` u `OTHER`), capacidad y visibilidad (`PUBLIC`, `MEMBERS` o `PRIVATE`). Todos requieren sesión de compañía; `PUBLIC` no es catálogo anónimo.
 3. Guarda: el recurso nace como borrador. Ábrelo desde su nombre, revisa el detalle y pulsa **Activar**.
-4. Como `CUSTOMER`, confirma que los recursos privados no aparecen. Con `COMPANY_ADMIN` o `BOOKING_MANAGER`, comprueba que sí se pueden inspeccionar según permisos.
-5. Edita nombre/descripción/capacidad/visibilidad. Para probar el conflicto de capacidad, crea una reserva futura activa y trata de bajar la capacidad por debajo de la ocupación.
-6. Desactiva el recurso y comprueba que no se ofrecen nuevos horarios. Reactívalo para las pruebas siguientes.
-7. Elimina únicamente un recurso descartable sin reservas futuras activas. La eliminación es lógica e irreversible; conserva el historial.
+4. En la lista prueba **Buscar por nombre**, **Actualizar** y los controles de página. El texto de búsqueda y la página quedan en la URL; la API entrega el catálogo completo sin paginar.
+5. Como `CUSTOMER`, confirma que los recursos privados no aparecen. Con `COMPANY_ADMIN` o `BOOKING_MANAGER`, comprueba que sí se pueden inspeccionar según permisos.
+6. Edita nombre/descripción/capacidad/visibilidad. Para probar el conflicto de capacidad, crea una reserva futura activa y trata de bajar la capacidad por debajo de la ocupación.
+7. Desactiva el recurso y comprueba que no se ofrecen nuevos horarios. Reactívalo para las pruebas siguientes.
+8. Elimina únicamente un recurso descartable sin reservas futuras activas. La eliminación es lógica e irreversible; conserva el historial.
 
 No hay detalle separado en la API: la pantalla resuelve el recurso desde el catálogo autorizado. No existe acción directa para poner estado `MAINTENANCE`.
 
