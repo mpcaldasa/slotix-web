@@ -92,7 +92,7 @@ Use Fira Sans for body copy, controls, and headings, with weight and size establ
 
 ## Layout
 
-At desktop sizes, a persistent navigation rail anchors an open working area with an explicit content width. Tables scroll inside their own visible surface. At narrow widths, navigation moves above content, forms collapse to one column, and tables retain a labeled horizontal scroll alternative. Native date, time and select controls are deliberate: their platform popup behavior is acceptable for these administrative fields; all form labels, validation and help text remain app-owned and Spanish.
+At desktop sizes, a persistent navigation rail anchors the work area while its main content compensates for the rail width to stay centered in the full viewport. Tables scroll inside their own visible surface. At narrow widths, navigation moves above content, forms collapse to one column, and tables retain a labeled horizontal scroll alternative. Native date, time and select controls are deliberate: their platform popup behavior is acceptable for these administrative fields; all form labels, validation and help text remain app-owned and Spanish.
 
 ## Elevation & Depth
 

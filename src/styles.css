@@ -17,6 +17,7 @@
   --nav: #14233b;
   --nav-strong: #1c3150;
   --nav-muted: #aebbd0;
+  --sidebar-width: 256px;
   --shadow-panel: 0 2px 4px rgb(20 35 59 / 4%), 0 12px 28px rgb(20 35 59 / 3%);
   --radius-control: 8px;
   --radius-panel: 14px;
@@ -292,7 +293,7 @@ pre {
   z-index: 20;
   inset: 0 auto 0 0;
   display: flex;
-  width: 256px;
+  width: var(--sidebar-width);
   flex-direction: column;
   gap: 1.8rem;
   padding: 1.45rem 1rem 1rem;
@@ -501,7 +502,7 @@ pre {
 .workspace {
   min-width: 0;
   min-height: 100vh;
-  margin-left: 256px;
+  margin-left: var(--sidebar-width);
 }
 
 .topbar {
@@ -560,6 +561,7 @@ pre {
   width: min(100%, 1536px);
   margin: 0 auto;
   padding: clamp(1.25rem, 3vw, 2.8rem) clamp(1.25rem, 3.5vw, 3.5rem) 4rem;
+  padding-right: calc(clamp(1.25rem, 3.5vw, 3.5rem) + var(--sidebar-width));
   outline: none;
 }
 
@@ -590,6 +592,14 @@ pre {
 
 .page-header > div:first-child {
   max-width: 760px;
+}
+
+@media (min-width: 1025px) {
+  .page-header > .actions {
+    flex-wrap: nowrap;
+    gap: 0.55rem;
+    white-space: nowrap;
+  }
 }
 
 .page-header p {
@@ -1064,12 +1074,20 @@ dialog .actions {
 }
 
 @media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 224px;
+  }
+
   .sidebar {
-    width: 224px;
+    width: var(--sidebar-width);
   }
 
   .workspace {
-    margin-left: 224px;
+    margin-left: var(--sidebar-width);
+  }
+
+  .workspace main {
+    padding-right: clamp(1.25rem, 3.5vw, 3.5rem);
   }
 
   .page-header {
