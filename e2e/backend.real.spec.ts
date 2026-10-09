@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
 // Explicit isolated QA database. These credentials are supplied out of band, never committed.
@@ -43,6 +44,12 @@ test('real isolated backend onboarding, resource schedule, policy, availability 
   await expect(
     page.getByRole('button', { name: 'Crear compañía con administrador' }),
   ).toBeVisible();
+  await page.getByText('Compañías autorizadas', { exact: true }).waitFor();
+  const screenshotDir = process.env['SLOTIX_QA_SCREENSHOT_DIR'];
+  if (screenshotDir) {
+    mkdirSync(screenshotDir, { recursive: true });
+    await page.screenshot({ path: join(screenshotDir, 'platform-companies.png'), fullPage: true });
+  }
   const companyLogin = await request.post(`${base}/users/login`, {
     data: { companyId: identity.company.id, email, password },
   });
@@ -107,6 +114,8 @@ test('real isolated backend onboarding, resource schedule, policy, availability 
   await page.locator('#auth-password').fill(password);
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Reservas', exact: true })).toBeVisible();
+  if (screenshotDir)
+    await page.screenshot({ path: join(screenshotDir, 'company-bookings.png'), fullPage: true });
   expect(apiRequests.some((url) => new URL(url).pathname.startsWith('/api/'))).toBe(true);
   expect(apiRequests.every((url) => new URL(url).origin === 'http://localhost:4200')).toBe(true);
   await page.getByRole('link', { name: 'Nueva reserva', exact: true }).click();
