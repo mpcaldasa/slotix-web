@@ -1,5 +1,7 @@
 # Slotix Web
 
+La guía de usuario y recorrido completo de pruebas está en [Guia-de-usuario-y-pruebas-E2E-Slotix.pdf](Guia-de-usuario-y-pruebas-E2E-Slotix.pdf); su fuente editable está en [docs/GUIA-DE-PRUEBAS.md](docs/GUIA-DE-PRUEBAS.md).
+
 Angular frontend for the existing multitenant `reservation-core` API. The application contains separate company and platform access, role-based feature routes and backend-backed reservation operations.
 
 ## Requirements
