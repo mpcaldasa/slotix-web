@@ -55,6 +55,11 @@ async function createForm(page: Page) {
 test('login validation, keyboard, accessibility and responsive viewport', async ({ page }) => {
   await mockApi(page);
   await page.goto('/login');
+  const loginCenterOffset = await page.locator('.auth-layout').evaluate((element) => {
+    const { x, width } = element.getBoundingClientRect();
+    return Math.abs(x + width / 2 - window.innerWidth / 2);
+  });
+  expect(loginCenterOffset).toBeLessThan(1);
   await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
   await expect(page.getByLabel('ID de compañía')).toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByLabel('ID de compañía')).toBeFocused();
