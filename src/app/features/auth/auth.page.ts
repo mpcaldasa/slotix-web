@@ -113,7 +113,7 @@ export class AuthPage {
             : 'Accede a tu compañía';
   readonly description =
     this.mode === 'company'
-      ? 'Ingresa el identificador que te entregó tu administrador.'
+      ? 'Ingresa el identificador único de tu compañía y tus datos de acceso.'
       : this.mode === 'platform'
         ? 'Administración global de compañías y usuarios.'
         : this.mode === 'recover'
@@ -135,10 +135,10 @@ export class AuthPage {
     if (this.mode === 'company')
       fields.push({
         key: 'companyId',
-        label: 'ID de compañía',
+        label: 'Identificador único de tu compañía',
         required: true,
         pattern: UUID_PATTERN,
-        hint: 'Identificador UUID de tu compañía.',
+        hint: 'Es el código que identifica a tu compañía. Pídeselo a quien administra tu cuenta.',
       });
     if (['company', 'platform', 'recover'].includes(this.mode))
       fields.push({
@@ -208,7 +208,7 @@ export class AuthPage {
           this.service.accept(this.token || data['token'], data['password'], data['fullName']),
         );
         this.success.set(
-          `Invitación aceptada. Tu ID de compañía es ${response.companyId}. Inicia sesión para continuar.`,
+          `Invitación aceptada. El identificador único de tu compañía es ${response.companyId}. Inicia sesión para continuar.`,
         );
       }
       this.editor()?.markSaved();

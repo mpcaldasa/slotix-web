@@ -9,7 +9,7 @@ import { DialogService } from '../../shared/dialog';
 import { label } from '../../shared/labels';
 import { OperationsService, AuditFilters } from './operations.service';
 const auditFields: Field[] = [
-  { key: 'companyId', label: 'ID de compañía', pattern: UUID_PATTERN },
+  { key: 'companyId', label: 'Identificador único de la compañía', pattern: UUID_PATTERN },
   { key: 'action', label: 'Acción', hint: 'Filtro exacto; por ejemplo BOOKING_CREATED.' },
   {
     key: 'entityType',

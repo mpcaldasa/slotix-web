@@ -22,7 +22,7 @@ In another terminal from this frontend directory:
 npm start
 ```
 
-Angular serves at `http://localhost:4200`; `proxy.conf.json` forwards `/api` to `http://localhost:8080`. Sign in with the company UUID supplied by a company administrator. Platform access is at `/platform/login`. The backend must have an active account/company membership. Invitations require backend SMTP delivery to be enabled; recovery returns the backend's privacy-preserving acknowledgement and does not prove email delivery.
+Angular serves at `http://localhost:4200`; `proxy.conf.json` forwards `/api` to `http://localhost:8080`. To sign in, use the unique company identifier and account credentials provided by your company administrator. Platform access is at `/platform/login`. The backend must have an active account/company membership. Invitations require backend SMTP delivery to be enabled; recovery returns the backend's privacy-preserving acknowledgement and does not prove email delivery.
 
 Runtime deployment settings are in `public/config.json`. Set `apiBaseUrl` to a same-origin `/api` path and configure the IANA `companyTimezone` only when it matches that company's backend timezone. Do not put secrets in this file. The API login token is kept in memory; a browser reload asks the user to sign in again. Logout clears the browser's token and does not revoke it server-side.
 
