@@ -52,6 +52,66 @@ Los permisos de la interfaz orientan, pero el backend vuelve a comprobar el rol,
 
 Un recurso sin horario, política vigente o disponibilidad no producirá opciones reservables. Las reglas y disponibilidad usan el día/hora de la compañía. Los instantes de reservas y bloqueos deben conservar su zona explícita; no los conviertas a la zona del navegador.
 
+### Datos mock listos para copiar en pruebas
+
+Estos valores son ficticios y sirven únicamente cuando Playwright intercepta `/api/**`. La suite actual define este login para el mock de compañía:
+
+| Campo del login de compañía | Valor simulado |
+| --- | --- |
+| Identificador único de la compañía | `11111111-1111-4111-8111-111111111111` |
+| Correo electrónico | `qa@example.test` |
+| Contraseña de prueba | `test-only-password` |
+
+El mock actual usa `CUSTOMER` por defecto. En una prueba de rol de compañía, llama `mockApi(page, 'COMPANY_ADMIN')` o `mockApi(page, 'BOOKING_MANAGER')`; conserva los mismos valores de acceso simulados. No representan usuarios o contraseñas creados en PostgreSQL. El helper actual no crea una sesión simulada de plataforma; para probar `/platform/login` se requiere una identidad `PLATFORM_ADMIN` real del entorno local.
+
+IDs y respuestas base que coinciden con `e2e/critical.spec.ts`:
+
+```json
+{
+  "companyId": "11111111-1111-4111-8111-111111111111",
+  "customerUserId": "22222222-2222-4222-8222-222222222222",
+  "resource": {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "name": "Sala de prueba",
+    "resourceType": "SPACE",
+    "description": "",
+    "capacity": 4,
+    "visibility": "MEMBERS",
+    "status": "ACTIVE"
+  },
+  "slot": {
+    "startAt": "2026-10-20T14:00:00Z",
+    "endAt": "2026-10-20T15:00:00Z"
+  },
+  "booking": {
+    "id": "44444444-4444-4444-8444-444444444444",
+    "companyId": "11111111-1111-4111-8111-111111111111",
+    "resourceId": "33333333-3333-4333-8333-333333333333",
+    "customerUserId": "22222222-2222-4222-8222-222222222222",
+    "bookingNumber": 1,
+    "startAt": "2026-10-20T14:00:00Z",
+    "endAt": "2026-10-20T15:00:00Z",
+    "status": "CONFIRMED",
+    "timezone": "America/Bogota"
+  }
+}
+```
+
+El slot equivale a 09:00–10:00 en Bogotá. Para agregar escenarios, reserva estos IDs para el fixture anterior y usa UUIDs distintos para cada entidad nueva. Ejemplo de datos de formulario para extender los mocks:
+
+| Formulario | Valores de prueba |
+| --- | --- |
+| Compañía | Razón social `Compañía Ejemplo QA S.A.S.`; nombre visible `Slotix QA`; slug `slotix-qa`; contacto `admin@example.test` |
+| Administrador inicial simulado | Nombre `Admin QA`; correo `admin@example.test`; contraseña inventada de al menos 8 caracteres, solo fixture |
+| Miembro gestor | `manager@example.test`; nombre `Gestor QA`; rol `BOOKING_MANAGER` |
+| Miembro cliente | `customer@example.test`; nombre `Cliente QA`; rol `CUSTOMER` |
+| Horario semanal | Martes (`weekday: 2`); inicio local `08:00`; fin local `18:00` |
+| Política con aprobación | `QA con aprobación`; mínimo 30, máximo 120, incremento 30 minutos; aviso mínimo 0; máximo 30 días; aviso de cancelación 0; aprobación `Sí`; cancelación del cliente `Sí` |
+| Política automática | Los mismos valores, con aprobación `No` |
+| Bloqueo de ejemplo | Inicio `2026-10-20T16:00:00-05:00`; fin `2026-10-20T17:00:00-05:00`; motivo `Prueba de mantenimiento`; tipo `MAINTENANCE` |
+
+Los datos de formularios de esta última tabla son ejemplos para fixtures futuros: el mock E2E actual no simula aún las escrituras de onboarding, miembros, recursos, horarios, bloqueos o políticas. Para probar esas escrituras con mocks, agrega interceptores de respuesta explícitos; para confirmar su comportamiento real, usa cuentas autorizadas y una base local de QA. Nunca pegues estos valores simulados en el login de backend esperando que autentiquen.
+
 ## 4. Autenticación y acceso
 
 ### 4.1 Compañía
