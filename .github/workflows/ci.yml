@@ -31,8 +31,20 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
       - name: Serve the built application with production security headers
-        run: docker run -d --name slotix-security-web --add-host reservation-core:host-gateway -p 127.0.0.1:4280:8080 -v "$PWD/dist/slotix-web/browser:/usr/share/nginx/html:ro" -v "$PWD/deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.29-alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+        run: |
+          docker build -t slotix-web:ci .
+          docker run -d --name slotix-security-web --add-host reservation-core:host-gateway -p 127.0.0.1:4280:8080 slotix-web:ci
       - run: npx playwright test --config playwright.security.config.ts
+      - name: Reject high and critical runtime image vulnerabilities
+        uses: aquasecurity/trivy-action@8f28faec26515256b6d22074d1d2a8986f4cbd87
+        with:
+          version: v0.76.1
+          image-ref: slotix-web:ci
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '1'
+          timeout: 10m
       - name: Stop the production security test container
         if: always()
         run: docker stop slotix-security-web || true
