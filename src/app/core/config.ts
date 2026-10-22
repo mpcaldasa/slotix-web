@@ -20,6 +20,7 @@ export function validateConfig(value: unknown): RuntimeConfig {
     url.password ||
     url.search ||
     url.hash ||
+    url.origin !== location.origin ||
     !['http:', 'https:'].includes(url.protocol) ||
     !url.pathname.endsWith('/api')
   )

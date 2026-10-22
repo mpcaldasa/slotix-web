@@ -239,3 +239,28 @@ test('authenticated availability screen and accessible calendar meet automated A
   ).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test('logout waits for server revocation and preserves the session on failure', async ({
+  page,
+}) => {
+  await mockApi(page);
+  await login(page);
+  await page.route('**/api/logout', (route) => route.fulfill({ status: 503, json: {} }));
+  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Cerrar sesión', exact: true })
+    .click();
+  await expect(page.getByText('Logout could not be confirmed.', { exact: false })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Reservas', exact: true })).toBeVisible();
+  await page.route('**/api/logout', async (route) => {
+    expect(route.request().headers()['authorization']).toMatch(/^Bearer /);
+    await route.fulfill({ status: 204 });
+  });
+  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Cerrar sesión', exact: true })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Accede a tu compañía' })).toBeVisible();
+});

@@ -26,7 +26,7 @@ npm start
 
 Angular serves at `http://localhost:4200`; `proxy.conf.json` forwards `/api` to `http://localhost:8080`. To sign in, use the unique company identifier and account credentials provided by your company administrator. Platform access is at `/platform/login`. The backend must have an active account/company membership. Invitations require backend SMTP delivery to be enabled; recovery returns the backend's privacy-preserving acknowledgement and does not prove email delivery.
 
-Runtime deployment settings are in `public/config.json`. Set `apiBaseUrl` to a same-origin `/api` path and configure the IANA `companyTimezone` only when it matches that company's backend timezone. Do not put secrets in this file. The API login token is kept in memory; a browser reload asks the user to sign in again. Logout clears the browser's token and does not revoke it server-side.
+Runtime deployment settings are in `public/config.json`. API configuration is restricted to the current origin. Set `apiBaseUrl` to a same-origin `/api` path and configure the IANA `companyTimezone` only when it matches that company's backend timezone. Do not put secrets in this file. The API login token is kept in memory; a browser reload asks the user to sign in again. Logout revokes the current access token through the backend before clearing browser memory. A failed logout keeps the session visible and asks the user to retry.
 
 ## Development and verification
 
@@ -59,3 +59,11 @@ Run `npm run build` and `docker build -t slotix-web .`. The included Nginx image
 - The backend does not expose current company profile/timezone to company sessions, customer policy details, member search for booking managers, invitation list/resend/revoke, or timezone mutation. The frontend adapts to these actual limitations.
 - The backend's existing slug regex vulnerability is documented in its own quality assessment. The form enforces a reasonable max length; a direct API request still needs a backend fix.
 - Design direction is a new frontend assumption because no prior product visual agreement was found. No billing, payments or anonymous public catalog are included.
+
+## Security deployment
+
+The Nginx container enforces a nonce-based CSP, Trusted Types, frame denial, a no-referrer policy, restricted browser permissions, request-size limits, and network timeouts. Angular receives the per-response nonce through `ngCspNonce`. TLS and HSTS must be set at the trusted HTTPS ingress. Avoid caching nonce-bearing HTML. The source `index.html` nonce placeholder is replaced only by Nginx; use the production container when verifying CSP.
+
+Vite is overridden to patched 8.3.5 within its current minor release because Angular build 22.2.3 still pins vulnerable 8.3.0. Keep this override until Angular supplies a patched version, and verify with unit tests, build, and browser E2E. Audit both runtime and development dependency graphs in CI. GitHub Actions use immutable SHA references, checked by `scripts/check-action-pins.mjs`; Dependabot tracks npm, actions, and Docker.
+
+The production-container browser suite is `npx playwright test --config playwright.security.config.ts` after serving the built application through Nginx on `127.0.0.1:4280`. It covers CSP headers, Trusted Types, unique nonces, console health, authentication UI, and server-confirmed logout on desktop and mobile. CI executes this suite after the regular tests. The Nginx access format omits query parameters to keep recovery tokens out of access logs.

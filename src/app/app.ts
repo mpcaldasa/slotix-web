@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs';
+import { filter, firstValueFrom } from 'rxjs';
+import { Api } from './core/api';
 import { Session } from './core/session';
 import { CONFIG } from './core/config';
 import { DialogComponent, DialogService } from './shared/dialog';
@@ -21,6 +22,7 @@ export class App {
   readonly label = label;
   private readonly router = inject(Router);
   private readonly dialogs = inject(DialogService);
+  private readonly api = inject(Api);
   constructor() {
     let signedIn = false;
     effect(() => {
@@ -50,7 +52,15 @@ export class App {
         'Se cerrará este acceso y se descartarán los cambios sin guardar.',
         'Cerrar sesión',
       )
-    )
-      this.session.clear();
+    ) {
+      try {
+        await firstValueFrom(this.api.post<void>('/logout'));
+        this.session.clear();
+      } catch {
+        this.feedback.success(
+          'Logout could not be confirmed. Please retry; your session remains active.',
+        );
+      }
+    }
   }
 }
