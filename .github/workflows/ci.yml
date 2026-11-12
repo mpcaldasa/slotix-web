@@ -36,7 +36,7 @@ jobs:
           docker run -d --name slotix-security-web --add-host reservation-core:host-gateway -p 127.0.0.1:4280:8080 slotix-web:ci
       - run: npx playwright test --config playwright.security.config.ts
       - name: Reject high and critical runtime image vulnerabilities
-        uses: aquasecurity/trivy-action@8f28faec26515256b6d22074d1d2a8986f4cbd87
+        uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec
         with:
           version: v0.76.1
           image-ref: slotix-web:ci
