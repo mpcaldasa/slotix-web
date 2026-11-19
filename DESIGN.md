@@ -67,7 +67,7 @@ Use Fira Sans for body copy, controls, and headings, with weight and size establ
 
 ## Layout
 
-At desktop sizes, a persistent navigation rail anchors the work area while the work area fills the remaining width, without a second sidebar-width padding. The shell background extends the navigation color through the full document; fixed navigation remains available in the viewport. Routed hosts are block elements. Tables scroll inside their own visible surface. At narrow widths, navigation moves above content, forms collapse to one column, and tables retain a labeled horizontal scroll alternative. Native date, time and select controls are deliberate: their platform popup behavior is acceptable for these administrative fields; all form labels, validation and help text remain app-owned and Spanish.
+At desktop sizes, a full-height navigation rail anchors the work area while the work area fills the remaining width, without a second sidebar-width padding. The shell background extends the navigation color through the full document; the navigation menu follows scrolling within its own column, and account actions sit at the document bottom. Routed hosts are block elements. Tables scroll inside their own visible surface. At narrow widths, navigation moves above content, forms collapse to one column, and tables retain a labeled horizontal scroll alternative. Native date, time and select controls are deliberate: their platform popup behavior is acceptable for these administrative fields; all form labels, validation and help text remain app-owned and Spanish.
 
 ## Elevation & Depth
 

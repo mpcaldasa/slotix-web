@@ -311,6 +311,8 @@ pre {
 
 /* Authenticated workspace */
 .app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   min-height: 100vh;
   background: linear-gradient(
     to right,
@@ -320,15 +322,16 @@ pre {
 }
 
 .sidebar {
-  position: fixed;
+  position: relative;
+  align-self: stretch;
   z-index: var(--z-sidebar);
-  inset: 0 auto 0 0;
+  inset: auto;
   display: flex;
   width: var(--sidebar-width);
   flex-direction: column;
   gap: 1.8rem;
   padding: 1.45rem 1rem 1rem;
-  overflow-y: auto;
+  overflow: visible;
   background: var(--nav);
   color: #fff;
 }
@@ -533,7 +536,7 @@ pre {
 .workspace {
   min-width: 0;
   min-height: 100vh;
-  margin-left: var(--sidebar-width);
+  margin-left: 0;
 }
 
 .topbar {
@@ -1197,7 +1200,7 @@ dialog .actions {
   }
 
   .workspace {
-    margin-left: var(--sidebar-width);
+    margin-left: 0;
   }
 
   .workspace main {
@@ -1225,7 +1228,7 @@ dialog .actions {
     border-bottom: 1px solid #263955;
   }
 
-  .sidebar > .brand {
+  .sidebar .brand {
     font-size: 1.35rem;
   }
 
@@ -1783,7 +1786,7 @@ button.warning {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 0.5rem 0.75rem;
   }
-  .sidebar > .brand {
+  .sidebar .brand {
     grid-column: 1;
     align-self: center;
   }
@@ -1854,4 +1857,27 @@ button.warning {
 .calendar-cluster.short strong,
 .calendar-cluster.short .cluster-colors {
   display: none;
+}
+
+.sidebar-top {
+  flex: 1;
+  min-width: 0;
+}
+.sidebar-navigation {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  .sidebar-top,
+  .sidebar-navigation {
+    display: contents;
+  }
 }

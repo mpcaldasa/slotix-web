@@ -16,15 +16,15 @@ Use server pagination when the API provides a page response; resource and bookin
 
 ## Canonical UI map
 
-| Capability        | Owner                                 | Contract                                                                                                           |
-| ----------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Shell and scroll  | App, app.html, styles.css             | Document scroll, viewport-fixed rail, full-document rail background; query updates preserve focus and scroll       |
-| Forms/select/date | shared/editor.ts, native controls     | Spanish labels, native keyboard behavior, visible validation, busy controls                                        |
-| Confirmation      | shared/dialog.ts, native dialog       | Top layer, inert background, full-document scrim, scroll lock, Escape/cancel and trigger focus restoration         |
-| Pagination        | shared/pagination.ts                  | Explicit range, total, previous/next, disabled edges; server pages retained for paged APIs                         |
-| Calendar          | features/bookings/booking-calendar.ts | Day/week navigation; state color and text; dense week groups open a day, every booking opens its authorized detail |
-| Feedback          | shared/feedback.ts                    | Server-confirmed success and recoverable inline errors                                                             |
-| Scrollbar         | styles.css                            | Visible global baseline; tables/calendar own internal overflow                                                     |
+| Capability        | Owner                                 | Contract                                                                                                                      |
+| ----------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Shell and scroll  | App, app.html, styles.css             | Document scroll, full-height grid rail, sticky menu bounded above the account footer; query updates preserve focus and scroll |
+| Forms/select/date | shared/editor.ts, native controls     | Spanish labels, native keyboard behavior, visible validation, busy controls                                                   |
+| Confirmation      | shared/dialog.ts, native dialog       | Top layer, inert background, full-document scrim, scroll lock, Escape/cancel and trigger focus restoration                    |
+| Pagination        | shared/pagination.ts                  | Explicit range, total, previous/next, disabled edges; server pages retained for paged APIs                                    |
+| Calendar          | features/bookings/booking-calendar.ts | Day/week navigation; state color and text; dense week groups open a day, every booking opens its authorized detail            |
+| Feedback          | shared/feedback.ts                    | Server-confirmed success and recoverable inline errors                                                                        |
+| Scrollbar         | styles.css                            | Visible global baseline; tables/calendar own internal overflow                                                                |
 
 Local configuration panels keep page state within their resource or policy screen. Company/bookings list navigation remains in the URL. Local pagination bounds the rendered rows; unpaged backend endpoints still retrieve the full authorized dataset. Backend pagination for those endpoints is a separate scaling task.
 

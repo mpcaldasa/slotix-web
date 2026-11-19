@@ -292,3 +292,28 @@ test('short weekly groups fit their time windows and open the complete day', asy
   await expect(page.locator('.calendar-day')).toHaveCount(1);
   await expect(page.locator('.calendar-event')).toHaveCount(6);
 });
+
+test('account footer stays at the sidebar end on long pages', async ({ page }) => {
+  await mockApi(page, 'COMPANY_ADMIN');
+  await login(page);
+  await page.getByRole('link', { name: 'Calendario', exact: true }).first().click();
+  await expect(page.locator('.calendar-scroll')).toBeVisible();
+  if (test.info().project.name === 'mobile') {
+    await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    return;
+  }
+  const positions = await page.evaluate(() => {
+    const rail = document.querySelector('.sidebar').getBoundingClientRect();
+    const footer = document.querySelector('.identity').getBoundingClientRect();
+    const shell = document.querySelector('.app-shell').getBoundingClientRect();
+    return { railBottom: rail.bottom, footerBottom: footer.bottom, shellBottom: shell.bottom };
+  });
+  expect(positions.railBottom - positions.footerBottom).toBeGreaterThanOrEqual(0);
+  expect(positions.railBottom - positions.footerBottom).toBeLessThan(32);
+  expect(Math.abs(positions.railBottom - positions.shellBottom)).toBeLessThan(1);
+  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeInViewport();
+});
