@@ -1,3 +1,4 @@
+import { Workspace } from '../../core/workspace';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -15,6 +16,7 @@ describe('invitation welcome and sign-in context', () => {
     );
     TestBed.configureTestingModule({
       providers: [
+        { provide: Workspace, useValue: { load: async () => undefined } },
         { provide: AuthService, useValue: { accept } },
         { provide: Session, useValue: {} },
         { provide: Router, useValue: {} },
@@ -43,6 +45,7 @@ describe('invitation welcome and sign-in context', () => {
     const navigateByUrl = vi.fn(() => Promise.resolve(true));
     TestBed.configureTestingModule({
       providers: [
+        { provide: Workspace, useValue: { load: async () => undefined } },
         { provide: AuthService, useValue: { login } },
         { provide: Session, useValue: { accept: vi.fn(), platform: () => false } },
         { provide: Router, useValue: { navigateByUrl } },

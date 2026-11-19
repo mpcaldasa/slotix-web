@@ -56,6 +56,7 @@ export interface components {
       effectiveFrom?: string;
       effectiveTo?: string;
     };
+    ReminderSettings: { enabled?: boolean; minutesBefore?: number };
     UpdateMembershipRolesRequest: {
       roles: Array<'COMPANY_ADMIN' | 'BOOKING_MANAGER' | 'CUSTOMER'>;
     };
@@ -196,6 +197,9 @@ export interface components {
       contactEmail?: string;
       createdAt?: string;
     };
+    Authorization: { authorizationUrl?: string };
+    Completion: { state: string; code: string };
+    ConnectionStatus: { configured?: boolean; connected?: boolean };
     CreateBookingPolicyRequest: {
       name: string;
       minDurationMinutes?: number;
@@ -268,8 +272,25 @@ export interface components {
     PasswordResetRequest: { email: string };
     PasswordResetResponse: { message?: string };
     ConfirmPasswordResetRequest: { token: string; password: string };
+    CompanySelection: { companyId: string };
     AcceptCompanyInvitationRequest: { token: string; password: string; fullName: string };
     AvailabilitySlot: { startAt?: string; endAt?: string };
+    ReminderDelivery: {
+      id?: string;
+      bookingId?: string;
+      bookingNumber?: number;
+      customerName?: string;
+      startAt?: string;
+      status?: string;
+      sentAt?: string;
+    };
+    ReminderDeliveryPage: {
+      items?: Array<components['schemas']['ReminderDelivery']>;
+      page?: number;
+      size?: number;
+      totalElements?: number;
+      totalPages?: number;
+    };
     MembershipPageResponse: {
       items?: Array<components['schemas']['MembershipResponse']>;
       page?: number;
@@ -324,5 +345,12 @@ export interface components {
       totalElements?: number;
       totalPages?: number;
     };
+    Profile: {
+      fullName?: string;
+      email?: string;
+      companyId?: string;
+      workspaces?: Array<components['schemas']['Workspace']>;
+    };
+    Workspace: { companyId?: string; companyName?: string; timezone?: string };
   };
 }

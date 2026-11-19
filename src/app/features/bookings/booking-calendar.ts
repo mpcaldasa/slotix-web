@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { PaginationComponent } from '../../shared/pagination';
-import { RouterLink } from '@angular/router';
 import type { Booking, Resource } from '../../core/models';
 import { dateInZone, formatInstant } from '../../core/time';
 import { label } from '../../shared/labels';
@@ -8,7 +7,7 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
 
 @Component({
   selector: 'app-booking-calendar',
-  imports: [RouterLink, PaginationComponent],
+  imports: [PaginationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="booking-calendar" aria-label="Calendario de reservas por hora">
@@ -69,6 +68,19 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
           (pageChange)="resourcePage.set($event)"
         />
       }
+      <div class="toolbar">
+        <label for="calendar-zoom"
+          >Tamaño de los horarios<select
+            id="calendar-zoom"
+            [value]="hourPixels()"
+            (change)="hourPixels.set(+$any($event.target).value)"
+          >
+            <option value="96">Compacto</option>
+            <option value="144">Cómodo</option>
+            <option value="192">Ampliado</option>
+          </select></label
+        >
+      </div>
       <div class="calendar-legend" aria-label="Colores de estado">
         @for (status of states; track status) {
           <span class="calendar-key" [attr.data-status]="status"
@@ -82,7 +94,7 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
         } @else {
           {{ visibleCount() }} {{ visibleCount() === 1 ? 'reserva' : 'reservas' }} en pantalla
         }
-        · Horas de Bogotá. Selecciona una reserva para ver su detalle.
+        · Horario de {{ zone() }}. Selecciona una reserva para ver su detalle.
       </p>
       <div
         class="calendar-scroll"
@@ -118,7 +130,7 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
           }
           <div class="calendar-times" [style.height.px]="height()">
             @for (hour of hours(); track hour) {
-              <span [style.top.px]="(hour - firstHour()) * 96"
+              <span [style.top.px]="(hour - firstHour()) * hourPixels()"
                 >{{ hour.toString().padStart(2, '0') }}:00</span
               >
             }
@@ -126,6 +138,7 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
           @for (day of days(); track day.key) {
             <div
               class="calendar-day"
+              [style.background]="gridBackground()"
               role="group"
               [attr.aria-label]="(day.name || weekday(day.date)) + ' ' + day.date"
               [style.height.px]="height()"
@@ -137,8 +150,8 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
                     [class.short]="group.end - group.start < 30"
                     [disabled]="busy()"
                     (click)="openDay(day.date)"
-                    [style.top.px]="((group.start - firstHour() * 60) * 96) / 60"
-                    [style.height.px]="((group.end - group.start) * 96) / 60"
+                    [style.top.px]="((group.start - firstHour() * 60) * hourPixels()) / 60"
+                    [style.height.px]="((group.end - group.start) * hourPixels()) / 60"
                     [attr.aria-label]="
                       group.events.length + ' reservas superpuestas. Ver día ' + day.date
                     "
@@ -155,14 +168,15 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
               }
               @for (event of day.events; track event.booking.id) {
                 @if (mode() === 'day' || event.lanes <= 2) {
-                  <a
+                  <button
+                    type="button"
                     class="calendar-event"
-                    [routerLink]="['/bookings', event.booking.id]"
+                    (click)="bookingSelected.emit(event.booking.id)"
                     [attr.data-status]="event.booking.status"
                     [attr.aria-label]="eventLabel(event.booking)"
                     [title]="eventLabel(event.booking)"
-                    [style.top.px]="((event.start - firstHour() * 60) * 96) / 60"
-                    [style.height.px]="((event.end - event.start) * 96) / 60"
+                    [style.top.px]="((event.start - firstHour() * 60) * hourPixels()) / 60"
+                    [style.height.px]="((event.end - event.start) * hourPixels()) / 60"
                     [style.left.%]="(event.lane * 100) / event.lanes"
                     [style.width]="'calc(' + 100 / event.lanes + '% - 6px)'"
                   >
@@ -173,10 +187,13 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
                     ><span>{{
                       event.booking.resourceName || resourceName(event.booking.resourceId)
                     }}</span>
-                    <small
-                      >#{{ event.booking.bookingNumber }} · {{ label(event.booking.status) }}</small
-                    >
-                  </a>
+                    @if (event.end - event.start >= 45 || hourPixels() >= 144) {
+                      <small
+                        >#{{ event.booking.bookingNumber }} ·
+                        {{ label(event.booking.status) }}</small
+                      >
+                    }
+                  </button>
                 }
               }
             </div>
@@ -192,11 +209,15 @@ export class BookingCalendar {
   readonly from = input.required<string>();
   readonly zone = input('America/Bogota');
   readonly busy = input(false);
+  readonly bookingSelected = output<string>();
   readonly rangeChange = output<{ from: string; to: string }>();
   readonly to = input.required<string>();
+  readonly hourPixels = signal(144);
   readonly resourceView = signal(false);
   readonly resourcePage = signal(0);
-  readonly mode = computed(() => (this.from() === this.to() ? 'day' : 'week'));
+  readonly mode = computed(() =>
+    this.resourceView() || this.from() === this.to() ? 'day' : 'week',
+  );
   readonly label = label;
   readonly states = [
     'PENDING',
@@ -209,10 +230,14 @@ export class BookingCalendar {
     'NO_SHOW',
   ];
   readonly currentDate = dateInZone(new Date().toISOString(), this.zone());
+  readonly resourceStart = computed(
+    () =>
+      Math.min(this.resourcePage(), Math.max(0, Math.ceil(this.resources().length / 4) - 1)) * 4,
+  );
   readonly days = computed(() => {
     if (this.resourceView())
       return this.resources()
-        .slice(this.resourcePage() * 4, this.resourcePage() * 4 + 4)
+        .slice(this.resourceStart(), this.resourceStart() + 4)
         .map((resource) => {
           const events = calendarEvents(
             this.bookings().filter((booking) => booking.resourceId === resource.id),
@@ -259,7 +284,12 @@ export class BookingCalendar {
   readonly hours = computed(() =>
     Array.from({ length: this.lastHour() - this.firstHour() }, (_, i) => this.firstHour() + i),
   );
-  readonly height = computed(() => this.hours().length * 96);
+  readonly gridBackground = computed(() => {
+    const half = this.hourPixels() / 2;
+    const full = this.hourPixels();
+    return `repeating-linear-gradient(to bottom, transparent 0 ${half - 1}px, #edf1f5 ${half - 1}px ${half}px, transparent ${half}px ${full - 1}px, var(--line) ${full - 1}px ${full}px)`;
+  });
+  readonly height = computed(() => this.hours().length * this.hourPixels());
   readonly heading = computed(() => {
     const format = (date: string) =>
       new Intl.DateTimeFormat('es-CO', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(

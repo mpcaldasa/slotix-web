@@ -1,3 +1,4 @@
+import { Workspace } from '../../core/workspace';
 import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -100,6 +101,7 @@ import { AuthService } from './auth.service';
 })
 export class AuthPage {
   readonly session = inject(Session);
+  private readonly workspace = inject(Workspace);
   private readonly service = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -230,6 +232,12 @@ export class AuthPage {
           }),
         );
         this.session.accept(response.token);
+        try {
+          await this.workspace.load();
+        } catch (error) {
+          this.session.clear();
+          throw error;
+        }
         this.editor()?.markSaved();
         await this.router.navigateByUrl(
           this.session.platform() ? '/platform/companies' : '/bookings',

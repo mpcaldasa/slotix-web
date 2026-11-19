@@ -8,6 +8,7 @@ export const labels: Record<string, string> = {
   DRAFT: 'Borrador',
   MAINTENANCE: 'Mantenimiento',
   SUSPENDED: 'Suspendido',
+  SKIPPED: 'Omitido',
   PENDING: 'Pendiente',
   CONFIRMED: 'Confirmada',
   REJECTED: 'Rechazada',

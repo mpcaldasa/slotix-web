@@ -1,3 +1,5 @@
+import { BookingPreview } from './booking-preview';
+import { Api } from '../../core/api';
 import { CustomerPicker, Customer } from '../customers/customer-picker';
 import { BookingCalendar } from './booking-calendar';
 import { PaginationComponent } from '../../shared/pagination';
@@ -42,13 +44,20 @@ function dateOffset(date: string, delta: number): string {
 }
 @Component({
   selector: 'app-bookings-page',
-  imports: [BookingCalendar, PaginationComponent, RouterLink, ErrorComponent, StatusComponent],
+  imports: [
+    BookingPreview,
+    BookingCalendar,
+    PaginationComponent,
+    RouterLink,
+    ErrorComponent,
+    StatusComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <header class="page-header">
       <div>
         <p class="eyebrow">Compañía / Reservas</p>
         <h1 tabindex="-1">{{ calendar() ? 'Calendario de reservas' : 'Reservas' }}</h1>
-        <p>Tu agenda, organizada por recurso y estado. Horas de Bogotá.</p>
+        <p>Tu agenda, organizada por recurso y estado. Horario de la compañía: {{ zone }}.</p>
       </div>
       <div class="actions booking-header-actions">
         <nav class="view-switcher" aria-label="Vistas de reservas">
@@ -116,17 +125,45 @@ function dateOffset(date: string, delta: number): string {
           >
         </div>
       </details>
+      @if (!loading() && !error()) {
+        <dl class="detail-grid booking-summary">
+          <div>
+            <dt>Reservas en esta consulta</dt>
+            <dd>{{ filtered().length }}</dd>
+          </div>
+          <div>
+            <dt>Por aprobar</dt>
+            <dd>{{ countStatus('PENDING') }}</dd>
+          </div>
+          <div>
+            <dt>Confirmadas</dt>
+            <dd>{{ countStatus('CONFIRMED') }}</dd>
+          </div>
+          <div>
+            <dt>En uso</dt>
+            <dd>{{ countStatus('CHECKED_IN') }}</dd>
+          </div>
+        </dl>
+      }
       @if (calendar() && validCalendarRange() && !error()) {
         <app-booking-calendar
           [bookings]="filtered()"
-          [resources]="resources()"
+          [resources]="calendarResources()"
           [from]="from()"
           [to]="to()"
           [zone]="zone"
           [busy]="loading()"
           (rangeChange)="calendarRange($event)"
+          (bookingSelected)="preview($event)"
         />
       }
+      <app-booking-preview
+        [open]="previewOpen()"
+        [booking]="previewBooking()"
+        [busy]="previewBusy()"
+        [error]="previewError()"
+        (closed)="closePreview()"
+      />
       @if (loading() && !calendar()) {
         <app-status [loading]="true" />
       } @else if (!filtered().length && !calendar()) {
@@ -192,9 +229,13 @@ export class BookingsPage {
   private readonly config = inject(CONFIG);
   readonly zone = this.config.companyTimezone;
   readonly calendar = signal(this.route.snapshot.data['calendar'] === true);
-  readonly from = signal(this.route.snapshot.queryParamMap.get('from') ?? localDate(new Date()));
+  readonly from = signal(
+    this.route.snapshot.queryParamMap.get('from') ??
+      dateInZone(new Date().toISOString(), this.zone),
+  );
   readonly to = signal(
-    this.route.snapshot.queryParamMap.get('to') ?? dateOffset(localDate(new Date()), 6),
+    this.route.snapshot.queryParamMap.get('to') ??
+      dateOffset(dateInZone(new Date().toISOString(), this.zone), 6),
   );
   readonly bookings = signal<Booking[]>([]);
   readonly resources = signal<Resource[]>([]);
@@ -205,6 +246,11 @@ export class BookingsPage {
   readonly statuses = statuses;
   readonly resourceFilter = signal(this.route.snapshot.queryParamMap.get('resourceId') ?? '');
   readonly statusFilter = signal(this.route.snapshot.queryParamMap.get('status') ?? '');
+  readonly calendarResources = computed(() =>
+    this.resources().filter(
+      (resource) => !this.resourceFilter() || resource.id === this.resourceFilter(),
+    ),
+  );
   readonly validCalendarRange = computed(() => {
     try {
       return localDateStart(this.to(), this.zone) >= localDateStart(this.from(), this.zone);
@@ -235,8 +281,35 @@ export class BookingsPage {
   constructor() {
     void this.load();
   }
+  countStatus(status: string) {
+    return this.filtered().filter((booking) => booking.status === status).length;
+  }
   resourceName(id: string): string {
     return this.resources().find((resource) => resource.id === id)?.name ?? id;
+  }
+  readonly previewOpen = signal(false);
+  readonly previewBooking = signal<Booking | null>(null);
+  readonly previewBusy = signal(false);
+  readonly previewError = signal<ApiError | null>(null);
+  private previewVersion = 0;
+  closePreview() {
+    this.previewVersion++;
+    this.previewOpen.set(false);
+  }
+  async preview(id: string) {
+    const version = ++this.previewVersion;
+    this.previewOpen.set(true);
+    this.previewBusy.set(true);
+    this.previewBooking.set(null);
+    this.previewError.set(null);
+    try {
+      const booking = await firstValueFrom(this.api.detail(id));
+      if (version === this.previewVersion) this.previewBooking.set(booking);
+    } catch (error) {
+      if (version === this.previewVersion) this.previewError.set(apiError(error));
+    } finally {
+      if (version === this.previewVersion) this.previewBusy.set(false);
+    }
   }
   private requestVersion = 0;
   async load() {
@@ -685,11 +758,43 @@ export class BookingCreatePage {
             ><button [disabled]="busy()" (click)="rescheduling.set(true)">Reprogramar</button>
           }
         </div>
+        @if (session.admin()) {
+          <div class="actions">
+            @if (googleConnected()) {
+              <button [disabled]="exportingGoogle() || busy()" (click)="exportGoogle()">
+                Actualizar en Google Calendar
+              </button>
+            } @else {
+              <a routerLink="/integrations">Conectar Google Calendar</a>
+            }
+          </div>
+        }
       </section>
     }`,
 })
 export class BookingDetailPage {
   private readonly api = inject(BookingsApi);
+  private readonly integrationApi = inject(Api);
+  readonly googleConnected = signal(false);
+  readonly exportingGoogle = signal(false);
+  async exportGoogle() {
+    const booking = this.booking();
+    if (!booking || this.exportingGoogle()) return;
+    this.exportingGoogle.set(true);
+    this.error.set(null);
+    try {
+      await firstValueFrom(
+        this.integrationApi.post<void>(
+          this.integrationApi.companyPath('/google-calendar/bookings/' + booking.id),
+        ),
+      );
+      this.feedback.success('Copia de la reserva actualizada en Google Calendar.');
+    } catch (error) {
+      this.error.set(apiError(error));
+    } finally {
+      this.exportingGoogle.set(false);
+    }
+  }
   private readonly route = inject(ActivatedRoute);
   readonly session = inject(Session);
   private readonly config = inject(CONFIG);
@@ -750,6 +855,18 @@ export class BookingDetailPage {
       const resources = await firstValueFrom(this.api.resources());
       if (id !== this.route.snapshot.paramMap.get('id')) return;
       this.booking.set(booking);
+      if (this.session.admin()) {
+        try {
+          const connection = await firstValueFrom(
+            this.integrationApi.get<{ connected: boolean }>(
+              this.integrationApi.companyPath('/google-calendar'),
+            ),
+          );
+          this.googleConnected.set(connection.connected);
+        } catch {
+          this.googleConnected.set(false);
+        }
+      }
       this.resource.set(resources.find((item) => item.id === booking.resourceId) ?? null);
     } catch (error) {
       if (id === this.route.snapshot.paramMap.get('id')) this.error.set(apiError(error));

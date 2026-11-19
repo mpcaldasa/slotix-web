@@ -3,6 +3,19 @@ import { authGuard, unsavedGuard } from './core/guards';
 const authenticated = { canActivate: [authGuard] };
 export const routes: Routes = [
   {
+    path: 'integrations/google/callback',
+    data: { title: 'Conexión con Google' },
+    loadComponent: () =>
+      import('./features/integrations/google-calendar.page').then((m) => m.GoogleCalendarCallback),
+  },
+  {
+    path: 'integrations',
+    ...authenticated,
+    data: { context: 'company', roles: ['COMPANY_ADMIN'], title: 'Integraciones' },
+    loadComponent: () =>
+      import('./features/integrations/google-calendar.page').then((m) => m.GoogleCalendarPage),
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/auth.page').then((m) => m.AuthPage),
     data: { mode: 'company', title: 'Acceso de compañía' },
@@ -108,6 +121,13 @@ export const routes: Routes = [
     canDeactivate: [unsavedGuard],
     data: { context: 'company', roles: ['COMPANY_ADMIN'], title: 'Miembros' },
     loadComponent: () => import('./features/members/members.page').then((m) => m.MembersPage),
+  },
+  {
+    path: 'reminders',
+    ...authenticated,
+    canDeactivate: [unsavedGuard],
+    data: { context: 'company', roles: ['COMPANY_ADMIN'], title: 'Recordatorios' },
+    loadComponent: () => import('./features/bookings/reminders.page').then((m) => m.RemindersPage),
   },
   {
     path: 'policies',

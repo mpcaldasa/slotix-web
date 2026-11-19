@@ -21,6 +21,7 @@ export interface Unsaved {
   hasUnsavedChanges(): boolean;
 }
 export const unsavedGuard: CanDeactivateFn<Unsaved> = (component) =>
+  inject(Router).currentNavigation()?.extras.state?.['discardChanges'] === true ||
   !component.hasUnsavedChanges() ||
   inject(DialogService).confirm(
     'Descartar cambios',

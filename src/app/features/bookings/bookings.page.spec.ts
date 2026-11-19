@@ -1,3 +1,4 @@
+import { Api } from '../../core/api';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, Subject } from 'rxjs';
@@ -61,6 +62,10 @@ describe('booking creation component', () => {
     TestBed.configureTestingModule({
       imports: [BookingCreatePage],
       providers: [
+        {
+          provide: Api,
+          useValue: { companyPath: () => '/google-calendar', get: () => of({ connected: false }) },
+        },
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: new Map() } } },
         { provide: BookingsApi, useValue: api },
@@ -158,6 +163,10 @@ describe('booking calendar date validation', () => {
     const api = { list: vi.fn(), resources: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
+        {
+          provide: Api,
+          useValue: { companyPath: () => '/google-calendar', get: () => of({ connected: false }) },
+        },
         provideRouter([]),
         { provide: BookingsApi, useValue: api },
         { provide: CONFIG, useValue: { companyTimezone: 'America/Bogota' } },
@@ -190,9 +199,13 @@ describe('booking detail route changes', () => {
     const detail = vi.fn((id: string) => (id === 'first' ? first : of({ ...booking, id })));
     TestBed.configureTestingModule({
       providers: [
+        {
+          provide: Api,
+          useValue: { companyPath: () => '/google-calendar', get: () => of({ connected: false }) },
+        },
         { provide: BookingsApi, useValue: { detail, resources: () => of([resource]) } },
         { provide: CONFIG, useValue: { companyTimezone: 'America/Bogota' } },
-        { provide: Session, useValue: {} },
+        { provide: Session, useValue: { admin: () => false } },
         { provide: DialogService, useValue: {} },
         {
           provide: ActivatedRoute,
@@ -224,6 +237,10 @@ describe('calendar request ordering', () => {
     const list = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
     TestBed.configureTestingModule({
       providers: [
+        {
+          provide: Api,
+          useValue: { companyPath: () => '/google-calendar', get: () => of({ connected: false }) },
+        },
         provideRouter([]),
         { provide: BookingsApi, useValue: { list, resources: () => of([resource]) } },
         { provide: CONFIG, useValue: { companyTimezone: 'America/Bogota' } },

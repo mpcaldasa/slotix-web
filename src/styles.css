@@ -1881,3 +1881,60 @@ button.warning {
     display: contents;
   }
 }
+
+.nav-context label {
+  color: var(--nav-muted);
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+.nav-context select {
+  margin-top: 0.35rem;
+  width: 100%;
+}
+.identity-role strong,
+.context-name {
+  overflow-wrap: anywhere;
+}
+
+button.calendar-event {
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: left;
+  font-weight: 400;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.mobile-workspace-switch {
+  display: none;
+}
+@media (max-width: 760px) {
+  .calendar-toolbar h2,
+  .calendar-toolbar > .view-switcher {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .calendar-toolbar > .view-switcher {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+  .booking-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .mobile-workspace-switch {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .mobile-workspace-switch label {
+    margin: 0;
+  }
+  .mobile-workspace-switch select {
+    width: 100%;
+    margin-top: 0.35rem;
+  }
+}

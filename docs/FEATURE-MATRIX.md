@@ -47,7 +47,7 @@ Base **members** = `/api/v1/companies/{companyId}/memberships`. All actions A on
 | Suspend | POST members`/{membershipId}/suspend` | No body | MembershipResponse; existing token receives 401 |
 | Activate | POST members`/{membershipId}/activate` | No body | MembershipResponse; target global user must be active |
 
-Roles are COMPANY_ADMIN, BOOKING_MANAGER, CUSTOMER. Last active company administrator with an active global account cannot be suspended/demoted: LAST_COMPANY_ADMIN_REQUIRED (409). Repeating no-op state/role changes preserves timestamps. No member detail/search, invitation list/revoke/resend, or company role discovery endpoint exists. Managers cannot list members: booking on behalf must use a known user UUID. User registration above supports direct provisioning alongside invitations.
+Roles are COMPANY_ADMIN, BOOKING_MANAGER, CUSTOMER. Last active company administrator with an active global account cannot be suspended/demoted: LAST_COMPANY_ADMIN_REQUIRED (409). Repeating no-op state/role changes preserves timestamps. Membership administration remains administrator-only. Invitation list/revoke/resend is still unavailable. Administrators and managers use a separate tenant customer directory for bounded name/email/phone search and booking history; booking on behalf selects a named person. Authenticated workspace discovery and switching use /api/me and /api/me/company. User registration above supports direct provisioning alongside invitations.
 
 ## Resources, schedules and blocks
 
@@ -137,3 +137,18 @@ Availability `date` and recurring schedules use company local dates/times. Slots
 Backend has no CORS policy configured in SecurityConfig. Use same-origin `/api` reverse proxy in production and an Angular development proxy; separate origins require explicit allowed-origin/header/method configuration on the server (including Authorization and Idempotency-Key). Public health/OpenAPI endpoints do not authorize business access. No billing/payment/anonymous catalog capability exists.
 
 Errors use `{status,code,error,fields}` with all 79 ApiErrorCode values in source. Branch on code/status, translate user guidance, associate validation field keys, clear invalid sessions on 401, preserve input on 403/409/422/network failures, and do not expose credentials or token-bearing URLs in logs. Unknown/internal/non-JSON errors require safe fallback guidance; success appears only after an actual API success.
+
+## Named customer, workspace and reminder additions
+
+| Operation                                     | Roles         | Behavior                                                                                                        |
+| --------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------- |
+| GET `/api/me`                                 | Authenticated | Person name/email and active authorized company names/timezones                                                 |
+| POST `/api/me/company`                        | Authenticated | Select an active membership; target roles are resolved again                                                    |
+| GET `/api/v1/companies/{companyId}/customers` | A/M           | Escaped name/email/phone search, active-only option, pages up to 50                                             |
+| GET/PUT `.../customers/{userId}`              | A/M           | Company-local phone/notes; never changes identity or roles                                                      |
+| GET `.../customers/{userId}/bookings`         | A/M           | Paged company-scoped history                                                                                    |
+| GET/PUT `.../reminders`                       | A             | Enabled and minutesBefore (1–10080); enabling requires email delivery                                           |
+| GET `.../reminders/history`                   | A             | Paged delivery status, named customer, booking number and original reminded time                                |
+| GET/POST/DELETE `.../google-calendar` routes  | A             | Restricted OAuth connection and manual one-way booking export; actual provider verification pending credentials |
+
+Bookings include customer/resource presentation names. Calendar UI has day/week/resource columns, resource pagination, zoom and a native quick preview. Missing Google configuration is displayed truthfully. SMTP acceptance does not guarantee final inbox delivery. Session restoration, initial company discovery during sign-in, recurrence, waiting lists and public booking remain pending. There is no Supabase integration; current identity is Spring Security/JWT with PostgreSQL storage.

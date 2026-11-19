@@ -304,6 +304,50 @@
         "responses": { "200": { "description": "OK" } }
       }
     },
+    "/api/v1/companies/{companyId}/reminders": {
+      "get": {
+        "tags": ["reminder-controller"],
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/ReminderSettings" } } }
+          }
+        }
+      },
+      "put": {
+        "tags": ["reminder-controller"],
+        "operationId": "update_3",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ReminderSettings" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/ReminderSettings" } } }
+          }
+        }
+      }
+    },
     "/api/v1/companies/{companyId}/memberships/{membershipId}/roles": {
       "put": {
         "tags": ["company-membership-controller"],
@@ -343,7 +387,7 @@
     "/api/v1/companies/{companyId}/customers/{userId}": {
       "get": {
         "tags": ["customer-controller"],
-        "operationId": "get",
+        "operationId": "get_1",
         "parameters": [
           {
             "name": "companyId",
@@ -367,7 +411,7 @@
       },
       "put": {
         "tags": ["customer-controller"],
-        "operationId": "update_3",
+        "operationId": "update_4",
         "parameters": [
           {
             "name": "companyId",
@@ -401,7 +445,7 @@
     "/api/v1/companies/{companyId}/booking-policies/{policyId}": {
       "put": {
         "tags": ["booking-policy-controller"],
-        "operationId": "update_4",
+        "operationId": "update_5",
         "parameters": [
           {
             "name": "companyId",
@@ -946,6 +990,73 @@
         }
       }
     },
+    "/api/v1/companies/{companyId}/google-calendar/connect": {
+      "post": {
+        "tags": ["google-calendar-controller"],
+        "operationId": "connect",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/Authorization" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/companies/{companyId}/google-calendar/complete": {
+      "post": {
+        "tags": ["google-calendar-controller"],
+        "operationId": "complete",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Completion" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/ConnectionStatus" } } }
+          }
+        }
+      }
+    },
+    "/api/v1/companies/{companyId}/google-calendar/bookings/{bookingId}": {
+      "post": {
+        "tags": ["google-calendar-controller"],
+        "operationId": "export",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": { "204": { "description": "No Content" } }
+      }
+    },
     "/api/v1/companies/{companyId}/booking-policies": {
       "get": {
         "tags": ["booking-policy-controller"],
@@ -1186,7 +1297,7 @@
     "/api/v1/bookings/{bookingId}/complete": {
       "post": {
         "tags": ["booking-lifecycle-controller"],
-        "operationId": "complete",
+        "operationId": "complete_1",
         "parameters": [
           {
             "name": "bookingId",
@@ -1478,6 +1589,24 @@
         }
       }
     },
+    "/api/me/company": {
+      "post": {
+        "tags": ["current-user-controller"],
+        "operationId": "select",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CompanySelection" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } }
+          }
+        }
+      }
+    },
     "/api/logout": {
       "post": {
         "tags": ["logout-controller"],
@@ -1615,6 +1744,73 @@
         }
       }
     },
+    "/api/v1/companies/{companyId}/reminders/history": {
+      "get": {
+        "tags": ["reminder-controller"],
+        "operationId": "history",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/ReminderDeliveryPage" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/companies/{companyId}/google-calendar": {
+      "get": {
+        "tags": ["google-calendar-controller"],
+        "operationId": "status",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/ConnectionStatus" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["google-calendar-controller"],
+        "operationId": "disconnect",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": { "204": { "description": "No Content" } }
+      }
+    },
     "/api/v1/companies/{companyId}/customers": {
       "get": {
         "tags": ["customer-controller"],
@@ -1664,7 +1860,7 @@
     "/api/v1/companies/{companyId}/customers/{userId}/bookings": {
       "get": {
         "tags": ["customer-controller"],
-        "operationId": "history",
+        "operationId": "history_1",
         "parameters": [
           {
             "name": "companyId",
@@ -1737,7 +1933,7 @@
     "/api/v1/bookings/{bookingId}": {
       "get": {
         "tags": ["booking-controller"],
-        "operationId": "get_1",
+        "operationId": "get_2",
         "parameters": [
           {
             "name": "bookingId",
@@ -1862,6 +2058,18 @@
           }
         }
       }
+    },
+    "/api/me": {
+      "get": {
+        "tags": ["current-user-controller"],
+        "operationId": "get_3",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "*/*": { "schema": { "$ref": "#/components/schemas/Profile" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1957,6 +2165,13 @@
           "endLocalTime": { "type": "string", "format": "time-local" },
           "effectiveFrom": { "type": "string", "format": "date" },
           "effectiveTo": { "type": "string", "format": "date" }
+        }
+      },
+      "ReminderSettings": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "minutesBefore": { "type": "integer", "format": "int32", "maximum": 10080, "minimum": 1 }
         }
       },
       "UpdateMembershipRolesRequest": {
@@ -2206,6 +2421,22 @@
           "createdAt": { "type": "string", "format": "date-time" }
         }
       },
+      "Authorization": {
+        "type": "object",
+        "properties": { "authorizationUrl": { "type": "string" } }
+      },
+      "Completion": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string", "maxLength": 100, "minLength": 0 },
+          "code": { "type": "string", "maxLength": 4096, "minLength": 0 }
+        },
+        "required": ["code", "state"]
+      },
+      "ConnectionStatus": {
+        "type": "object",
+        "properties": { "configured": { "type": "boolean" }, "connected": { "type": "boolean" } }
+      },
       "CreateBookingPolicyRequest": {
         "type": "object",
         "properties": {
@@ -2354,6 +2585,11 @@
         },
         "required": ["password", "token"]
       },
+      "CompanySelection": {
+        "type": "object",
+        "properties": { "companyId": { "type": "string", "format": "uuid" } },
+        "required": ["companyId"]
+      },
       "AcceptCompanyInvitationRequest": {
         "type": "object",
         "properties": {
@@ -2368,6 +2604,31 @@
         "properties": {
           "startAt": { "type": "string", "format": "date-time" },
           "endAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ReminderDelivery": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "bookingId": { "type": "string", "format": "uuid" },
+          "bookingNumber": { "type": "integer", "format": "int64" },
+          "customerName": { "type": "string" },
+          "startAt": { "type": "string", "format": "date-time" },
+          "status": { "type": "string" },
+          "sentAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ReminderDeliveryPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReminderDelivery" }
+          },
+          "page": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "totalElements": { "type": "integer", "format": "int64" },
+          "totalPages": { "type": "integer", "format": "int32" }
         }
       },
       "MembershipPageResponse": {
@@ -2458,6 +2719,23 @@
           "size": { "type": "integer", "format": "int32" },
           "totalElements": { "type": "integer", "format": "int64" },
           "totalPages": { "type": "integer", "format": "int32" }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "fullName": { "type": "string" },
+          "email": { "type": "string" },
+          "companyId": { "type": "string", "format": "uuid" },
+          "workspaces": { "type": "array", "items": { "$ref": "#/components/schemas/Workspace" } }
+        }
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "companyId": { "type": "string", "format": "uuid" },
+          "companyName": { "type": "string" },
+          "timezone": { "type": "string" }
         }
       }
     },

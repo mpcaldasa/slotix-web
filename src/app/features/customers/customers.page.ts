@@ -1,4 +1,4 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { Component, inject, signal, viewChild, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Api } from '../../core/api';
 import { apiError } from '../../core/errors';
@@ -90,7 +90,7 @@ import { label } from '../../shared/labels';
         <app-editor
           id="customer-profile"
           [fields]="fields"
-          [values]="{ phone: person.phone, notes: person.notes }"
+          [values]="profileValues()"
           [busy]="saving()"
           submitLabel="Guardar contacto"
           (saved)="save($event)"
@@ -173,6 +173,10 @@ export class CustomersPage {
   readonly saving = signal(false);
   readonly error = signal<ApiError | null>(null);
   readonly selected = signal<Customer | null>(null);
+  readonly profileValues = computed(() => ({
+    phone: this.selected()?.phone ?? '',
+    notes: this.selected()?.notes ?? '',
+  }));
   readonly history = signal<Booking[]>([]);
   readonly historyTotal = signal(0);
   readonly historyPage = signal(0);

@@ -33,6 +33,13 @@ async function mockApi(page: Page, role = 'CUSTOMER') {
     const token = `header.${Buffer.from(JSON.stringify({ sub: userId, companyId, roles: [role], exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.signature`;
     let body: unknown = [];
     if (path === '/api/users/login') body = { token, tokenType: 'Bearer' };
+    else if (path === '/api/me')
+      body = {
+        fullName: 'QA Person',
+        email: 'qa@example.test',
+        companyId,
+        workspaces: [{ companyId, companyName: 'QA Company', timezone: 'America/Bogota' }],
+      };
     else if (path.endsWith('/resources')) body = [resource];
     else if (path.endsWith('/availability')) body = [slot];
     else if (path === `/api/v1/bookings/${bookingId}`) body = booking;
@@ -316,4 +323,25 @@ test('account footer stays at the sidebar end on long pages', async ({ page }) =
   expect(Math.abs(positions.railBottom - positions.shellBottom)).toBeLessThan(1);
   await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).scrollIntoViewIfNeeded();
   await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeInViewport();
+});
+
+test('calendar preview opens without leaving the selected resource view', async ({ page }) => {
+  await mockApi(page);
+  await page.route('**/api/v1/calendar?**', (route) => route.fulfill({ json: [booking] }));
+  await login(page);
+  await page.getByRole('link', { name: 'Calendario', exact: true }).first().click();
+  await page.locator('.agenda-filters summary').click();
+  await page.locator('#bookings-from').fill('2026-10-20');
+  await page.locator('#bookings-to').fill('2026-10-20');
+  await page.getByRole('button', { name: 'Actualizar', exact: true }).click();
+  await page.getByRole('button', { name: 'Por recurso', exact: true }).click();
+  await expect(page.locator('.calendar-event')).toHaveCount(1);
+  const url = page.url();
+  await page.locator('.calendar-event').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('link', { name: 'Abrir reserva' })).toBeVisible();
+  expect(page.url()).toBe(url);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  expect(page.url()).toBe(url);
 });

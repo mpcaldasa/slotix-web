@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject } from '@angular/core';
+import { Workspace } from './core/workspace';
+import { apiError } from './core/errors';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom } from 'rxjs';
@@ -17,6 +26,9 @@ import { label } from './shared/labels';
 })
 export class App {
   readonly session = inject(Session);
+  readonly workspace = inject(Workspace);
+  readonly switching = signal(false);
+  readonly workspaceError = signal('');
   readonly config = inject(CONFIG);
   readonly feedback = inject(Feedback);
   readonly label = label;
@@ -52,6 +64,45 @@ export class App {
         }, 0);
       });
   }
+  async switchCompany(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const target = select.value;
+    select.value = this.session.identity()?.companyId ?? '';
+    if (this.switching() || target === this.session.identity()?.companyId) return;
+    const company = this.workspace.profile()?.workspaces.find((item) => item.companyId === target);
+    if (!company) return;
+    if (
+      !(await this.dialogs.confirm(
+        'Cambiar de compañía',
+        'Abriremos ' + company.companyName + '. Los cambios sin guardar se descartarán.',
+        'Cambiar compañía',
+      ))
+    )
+      return;
+    this.switching.set(true);
+    this.workspaceError.set('');
+    try {
+      const response = await firstValueFrom(
+        this.api.post<{ token: string }>('/me/company', { companyId: target }),
+      );
+      this.session.accept(response.token);
+      try {
+        await this.workspace.load();
+      } catch (error) {
+        this.session.clear();
+        throw error;
+      }
+      await this.router.navigateByUrl('/login', {
+        skipLocationChange: true,
+        state: { discardChanges: true },
+      });
+      await this.router.navigateByUrl('/bookings');
+    } catch (error) {
+      this.workspaceError.set(apiError(error).error);
+    } finally {
+      this.switching.set(false);
+    }
+  }
   async logout(): Promise<void> {
     if (
       await this.dialogs.confirm(
@@ -63,6 +114,7 @@ export class App {
       try {
         await firstValueFrom(this.api.post<void>('/logout'));
         this.session.clear();
+        this.workspace.profile.set(null);
       } catch {
         this.feedback.success(
           'Logout could not be confirmed. Please retry; your session remains active.',

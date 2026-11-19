@@ -14,7 +14,30 @@
           </a>
           <div class="nav-context">
             <span class="context-kicker">Espacio de trabajo</span>
-            <span class="context-name">{{ session.platform() ? 'Plataforma' : 'Compañía' }}</span>
+            <span class="context-name">{{
+              session.platform() ? 'Plataforma' : workspace.current()?.companyName || 'Compañía'
+            }}</span>
+            @if (!session.platform() && (workspace.profile()?.workspaces?.length || 0) > 1) {
+              <label for="workspace-company"
+                >Cambiar compañía<select
+                  id="workspace-company"
+                  [disabled]="switching()"
+                  (change)="switchCompany($event)"
+                >
+                  @for (company of workspace.profile()?.workspaces; track company.companyId) {
+                    <option
+                      [value]="company.companyId"
+                      [selected]="company.companyId === identity.companyId"
+                    >
+                      {{ company.companyName }}
+                    </option>
+                  }
+                </select></label
+              >
+            }
+            @if (workspaceError()) {
+              <p role="alert">{{ workspaceError() }}</p>
+            }
           </div>
           <nav class="primary-nav" aria-label="Secciones">
             <span class="nav-section-label">{{
@@ -85,6 +108,18 @@
                   </svg>
                   <span>Miembros</span>
                 </a>
+                <a routerLink="/integrations" routerLinkActive="active"
+                  ><svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="m8 16 8-8M9 5l2-2a5 5 0 0 1 7 7l-2 2M15 19l-2 2a5 5 0 0 1-7-7l2-2"
+                    /></svg
+                  ><span>Integraciones</span></a
+                >
+                <a routerLink="/reminders" routerLinkActive="active"
+                  ><svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM9 21h6" /></svg
+                  ><span>Recordatorios</span></a
+                >
                 <a routerLink="/policies" routerLinkActive="active">
                   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
                     <path d="m12 3 8 3v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3ZM9 12l2 2 4-4" />
@@ -102,7 +137,8 @@
             label(identity.roles[0] ?? 'CUSTOMER').slice(0, 1)
           }}</span>
           <span
-            ><small>Sesión activa</small>
+            ><small>Sesión activa</small
+            ><strong>{{ workspace.profile()?.fullName || 'Tu cuenta' }}</strong>
             @for (role of identity.roles; track role) {
               <strong>{{ label(role) }}</strong>
             }
@@ -110,9 +146,10 @@
         </div>
         <details class="identity-details">
           <summary>Datos de acceso</summary>
-          <small>Usuario</small><code>{{ identity.userId }}</code>
+          <small>Correo</small><span>{{ workspace.profile()?.email || 'No disponible' }}</span>
           @if (identity.companyId) {
-            <small>Compañía autorizada</small><code>{{ identity.companyId }}</code>
+            <small>Compañía autorizada</small
+            ><span>{{ workspace.current()?.companyName || 'Compañía' }}</span>
           }
         </details>
         <button type="button" class="logout-button" (click)="logout()">
@@ -150,6 +187,33 @@
           }}</span>
         </div>
       </header>
+      @if (!session.platform() && workspace.current()) {
+        <div class="mobile-workspace-switch">
+          @if ((workspace.profile()?.workspaces?.length || 0) > 1) {
+            <label for="workspace-company-mobile"
+              >Compañía activa<select
+                id="workspace-company-mobile"
+                [disabled]="switching()"
+                (change)="switchCompany($event)"
+              >
+                @for (company of workspace.profile()?.workspaces; track company.companyId) {
+                  <option
+                    [value]="company.companyId"
+                    [selected]="company.companyId === identity.companyId"
+                  >
+                    {{ company.companyName }}
+                  </option>
+                }
+              </select></label
+            >
+          } @else {
+            <span>Compañía activa</span><strong>{{ workspace.current()?.companyName }}</strong>
+          }
+          @if (workspaceError()) {
+            <p role="alert">{{ workspaceError() }}</p>
+          }
+        </div>
+      }
       <main id="main" tabindex="-1">
         <div role="status" class="feedback" [class.visible]="feedback.message()">
           {{ feedback.message() }}

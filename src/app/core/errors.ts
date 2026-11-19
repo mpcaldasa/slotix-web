@@ -1,6 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ApiError } from './models';
 const messages: Record<string, string> = {
+  CALENDAR_NOT_CONFIGURED: 'Google Calendar aún no está habilitado en esta instalación.',
+  CALENDAR_AUTHORIZATION_FAILED:
+    'No se pudo completar la conexión con Google. Inicia la conexión de nuevo y concede el permiso solicitado.',
+  CALENDAR_PROVIDER_UNAVAILABLE:
+    'Google no pudo completar la operación. Intenta de nuevo; si el problema continúa, revisa la conexión.',
   CUSTOMER_NOT_FOUND: 'Esta persona ya no pertenece a la compañía. Actualiza el directorio.',
   INVALID_CREDENTIALS:
     'No se pudo iniciar sesión. Revisa tus credenciales, compañía y estado de acceso.',

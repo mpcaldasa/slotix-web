@@ -91,3 +91,9 @@ Runtime CSS remains canonical (Model B). The sidebar, header and full-document m
 - Do not add fabricated dashboards, public listings, payment surfaces or sample bookings.
 - Keep navigation, actions, error messages and field guidance in Spanish.
 - Calendar and list are complementary views. A timed calendar uses status colors plus text, while tables remain the compact alternative.
+
+## Customer and calendar additions
+
+Named contacts replace free-form user identifiers during booking. Contact sheets reuse the editor, table, status, pagination and confirmation owners. Resource calendars show up to four resources per page, keep resource names in column headers and offer 96/144/192-pixel hour scales. Short event blocks prioritize time and customer name; color and accessible labels retain booking status. A native booking preview follows the same dialog backdrop, scroll lock, keyboard and focus behavior as existing confirmation dialogs.
+
+Workspace switching and reminders live within the existing navigation groups. Operational copy distinguishes local SMTP verification, unconfigured Google OAuth and manual calendar copying. Names can wrap in the navigation and account footer.

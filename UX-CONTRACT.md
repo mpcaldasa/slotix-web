@@ -35,3 +35,13 @@ Never automatically retry a write. Keep a booking creation key stable across ret
 ## Locale, time and access
 
 Spanish (`es-CO`) is the first locale. Backend timestamps are instants; format them in the booking timezone snapshot or configured IANA company timezone. Send availability's slot instants unchanged. Local schedule rules use a company-local weekday and local clock value. Administrative UTC instants require an explicit offset. Keyboard focus, visible focus rings, semantic tables/forms, reduced motion and responsive operation are part of each shared surface.
+
+## Customer and workspace workflows
+
+Company administrators and booking managers share a tenant-scoped customer directory, bounded name/email/phone search and paged booking history. Contact notes and telephone numbers belong to a company; the directory does not modify global identity or membership roles. Booking creation uses the shared customer picker and defaults to the authenticated person. Customer accounts never receive staff search controls. The shared editor and unsaved-change guard protect contact changes.
+
+The workspace header and account footer use authenticated company/person names. Only persisted active company memberships populate the company selector. Switching requires explicit discard confirmation, resolves target roles server-side and initializes the target timezone before opening its bookings.
+
+The calendar supports day/week/resource columns, resource pagination, zoom and a native-dialog booking preview. Resource filters narrow columns. Preview closes with Escape, restores trigger focus and preserves the calendar URL and filters. Summary counts describe the filtered query; no occupancy percentage is invented.
+
+Only company administrators configure reminders or Google Calendar. Reminders require email delivery and explain their notice window. Google credentials missing, consent cancellation and provider failure never produce a connected success state. The first Google release copies bookings manually and explains that external edits do not change Slotix availability. OAuth callback parameters are cleared from browser history.

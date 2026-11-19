@@ -29,6 +29,7 @@ const deliveryFields: Field[] = [
       { value: 'PENDING', label: 'Pendiente' },
       { value: 'SENDING', label: 'Enviando' },
       { value: 'SENT', label: 'Enviada' },
+      { value: 'SKIPPED', label: 'Omitida' },
     ],
   },
 ];
