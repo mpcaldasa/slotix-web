@@ -1,3 +1,5 @@
+import { BookingCalendar } from './booking-calendar';
+import { PaginationComponent } from '../../shared/pagination';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -39,139 +41,144 @@ function dateOffset(date: string, delta: number): string {
 }
 @Component({
   selector: 'app-bookings-page',
-  imports: [RouterLink, ErrorComponent, StatusComponent],
+  imports: [BookingCalendar, PaginationComponent, RouterLink, ErrorComponent, StatusComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <header class="page-header">
       <div>
         <p class="eyebrow">Compañía / Reservas</p>
         <h1 tabindex="-1">{{ calendar() ? 'Calendario de reservas' : 'Reservas' }}</h1>
-        <p>Fechas y horas en {{ zone }}. El servidor define los estados y permisos vigentes.</p>
+        <p>Tu agenda, organizada por recurso y estado. Horas de Bogotá.</p>
       </div>
       <div class="actions booking-header-actions">
         <nav class="view-switcher" aria-label="Vistas de reservas">
-          <a routerLink="/bookings" [attr.aria-current]="calendar() ? null : 'page'">Lista</a>
-          <a routerLink="/calendar" [attr.aria-current]="calendar() ? 'page' : null">Calendario</a>
+          <a
+            routerLink="/bookings"
+            [queryParams]="viewQuery()"
+            [attr.aria-current]="calendar() ? null : 'page'"
+            >Lista</a
+          >
+          <a
+            routerLink="/calendar"
+            [queryParams]="viewQuery()"
+            [attr.aria-current]="calendar() ? 'page' : null"
+            >Calendario</a
+          >
         </nav>
         <a class="button primary" routerLink="/bookings/new">Nueva reserva</a>
       </div>
     </header>
     <app-error [error]="error()" />
     <section class="panel">
-      <div class="toolbar">
-        <label for="bookings-from"
-          >Desde<input
-            id="bookings-from"
-            type="date"
-            [value]="from()"
-            (change)="setFrom($event)" /></label
-        ><label for="bookings-to"
-          >Hasta<input
-            id="bookings-to"
-            type="date"
-            [value]="to()"
-            (change)="setTo($event)" /></label
-        ><button [disabled]="loading()" (click)="load()">Actualizar</button>
-      </div>
-      @if (loading()) {
+      <details class="agenda-filters" [open]="!calendar()">
+        <summary>Filtrar por fecha, recurso o estado</summary>
+        <div class="toolbar">
+          <label for="bookings-from"
+            >Desde<input
+              id="bookings-from"
+              type="date"
+              [value]="from()"
+              (change)="setFrom($event)" /></label
+          ><label for="bookings-to"
+            >Hasta<input
+              id="bookings-to"
+              type="date"
+              [value]="to()"
+              (change)="setTo($event)" /></label
+          ><button [disabled]="loading()" (click)="load()">Actualizar</button>
+        </div>
+        <div class="toolbar calendar-filters">
+          <label for="booking-resource-filter"
+            >Recurso<select
+              id="booking-resource-filter"
+              aria-label="Filtrar por recurso"
+              [value]="resourceFilter()"
+              (change)="setResourceFilter($event)"
+            >
+              <option value="">Todos los recursos</option>
+              @for (resource of resources(); track resource.id) {
+                <option [value]="resource.id">{{ resource.name }}</option>
+              }
+            </select></label
+          >
+          <label for="booking-status-filter"
+            >Estado<select
+              id="booking-status-filter"
+              aria-label="Filtrar por estado"
+              [value]="statusFilter()"
+              (change)="setStatusFilter($event)"
+            >
+              <option value="">Todos los estados</option>
+              @for (status of statuses; track status) {
+                <option [value]="status">{{ label(status) }}</option>
+              }
+            </select></label
+          >
+        </div>
+      </details>
+      @if (calendar() && validCalendarRange() && !error()) {
+        <app-booking-calendar
+          [bookings]="filtered()"
+          [resources]="resources()"
+          [from]="from()"
+          [to]="to()"
+          [zone]="zone"
+          [busy]="loading()"
+          (rangeChange)="calendarRange($event)"
+        />
+      }
+      @if (loading() && !calendar()) {
         <app-status [loading]="true" />
-      } @else if (!filtered().length) {
+      } @else if (!filtered().length && !calendar()) {
         <app-status [message]="'No hay reservas en este intervalo para tu identidad.'" />
-      } @else {
-        @if (calendar()) {
-          <div class="table-wrap">
-            <table class="calendar-table">
-              <caption>
-                Agenda accesible ·
-                {{
-                  from()
-                }}
-                a
-                {{
-                  to()
-                }}
-                ·
-                {{
-                  zone
-                }}
-              </caption>
-              <thead>
+      } @else if (!calendar()) {
+        <div class="table-wrap">
+          <table>
+            <caption>
+              Reservas ·
+              {{
+                filtered().length
+              }}
+              resultados (máximo 31 días)
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Reserva</th>
+                <th scope="col">Fecha y hora ({{ zone }})</th>
+                <th scope="col">Recurso</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (booking of paged(); track booking.id) {
                 <tr>
-                  <th scope="col">Inicio</th>
-                  <th scope="col">Reserva</th>
-                  <th scope="col">Recurso</th>
-                  <th scope="col">Estado</th>
+                  <td>
+                    <a [routerLink]="['/bookings', booking.id]">{{
+                      booking.bookingNumber ? '#' + booking.bookingNumber : booking.id
+                    }}</a>
+                  </td>
+                  <td>
+                    {{ format(booking.startAt) }}<small>Hasta {{ format(booking.endAt) }}</small>
+                  </td>
+                  <td>{{ resourceName(booking.resourceId) }}</td>
+                  <td>
+                    <span class="status-pill" [attr.data-status]="booking.status">{{
+                      label(booking.status)
+                    }}</span>
+                  </td>
+                  <td><a [routerLink]="['/bookings', booking.id]">Ver detalle</a></td>
                 </tr>
-              </thead>
-              <tbody>
-                @for (booking of ordered(); track booking.id) {
-                  <tr>
-                    <td>{{ format(booking.startAt) }}</td>
-                    <td>
-                      <a [routerLink]="['/bookings', booking.id]"
-                        >Reserva {{ booking.bookingNumber ? booking.bookingNumber : booking.id }}</a
-                      ><small>{{ format(booking.endAt) }}</small>
-                    </td>
-                    <td>{{ resourceName(booking.resourceId) }}</td>
-                    <td>
-                      <span class="status-pill" [attr.data-status]="booking.status">{{
-                        label(booking.status)
-                      }}</span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        } @else {
-          <div class="table-wrap">
-            <table>
-              <caption>
-                Reservas ·
-                {{
-                  filtered().length
-                }}
-                resultados (máximo 31 días)
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Reserva</th>
-                  <th scope="col">Fecha y hora ({{ zone }})</th>
-                  <th scope="col">Recurso</th>
-                  <th scope="col">Estado</th>
-                  <th scope="col">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (booking of paged(); track booking.id) {
-                  <tr>
-                    <td>
-                      <a [routerLink]="['/bookings', booking.id]">{{
-                        booking.bookingNumber ? '#' + booking.bookingNumber : booking.id
-                      }}</a>
-                    </td>
-                    <td>
-                      {{ format(booking.startAt) }}<small>Hasta {{ format(booking.endAt) }}</small>
-                    </td>
-                    <td>{{ resourceName(booking.resourceId) }}</td>
-                    <td>
-                      <span class="status-pill" [attr.data-status]="booking.status">{{
-                        label(booking.status)
-                      }}</span>
-                    </td>
-                    <td><a [routerLink]="['/bookings', booking.id]">Ver detalle</a></td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-          <nav class="actions" aria-label="Paginación de reservas">
-            <button [disabled]="page() === 0" (click)="page.update((v) => v - 1)">Anterior</button
-            ><span>Página {{ page() + 1 }} de {{ pages() }}</span
-            ><button [disabled]="page() + 1 >= pages()" (click)="page.update((v) => v + 1)">
-              Siguiente
-            </button>
-          </nav>
-        }
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination
+          [total]="filtered().length"
+          [page]="page()"
+          [busy]="loading()"
+          label="Paginación de reservas"
+          (pageChange)="setPage($event)"
+        />
       }
     </section>`,
 })
@@ -191,27 +198,47 @@ export class BookingsPage {
   readonly resources = signal<Resource[]>([]);
   readonly loading = signal(true);
   readonly error = signal<ApiError | null>(null);
-  readonly page = signal(0);
+  readonly page = signal(Math.max(0, Number(this.route.snapshot.queryParamMap.get('page')) || 0));
   readonly label = label;
+  readonly statuses = statuses;
+  readonly resourceFilter = signal(this.route.snapshot.queryParamMap.get('resourceId') ?? '');
+  readonly statusFilter = signal(this.route.snapshot.queryParamMap.get('status') ?? '');
+  readonly validCalendarRange = computed(() => {
+    try {
+      return localDateStart(this.to(), this.zone) >= localDateStart(this.from(), this.zone);
+    } catch {
+      return false;
+    }
+  });
+  readonly viewQuery = computed(() => ({
+    from: this.from(),
+    to: this.to(),
+    resourceId: this.resourceFilter() || null,
+    status: this.statusFilter() || null,
+  }));
   readonly format = (value: string) => formatInstant(value, this.zone);
   readonly filtered = computed(() =>
     this.bookings().filter(
       (booking) =>
-        this.session.staff() || booking.customerUserId === this.session.identity()?.userId,
+        (this.session.staff() || booking.customerUserId === this.session.identity()?.userId) &&
+        (!this.resourceFilter() || booking.resourceId === this.resourceFilter()) &&
+        (!this.statusFilter() || booking.status === this.statusFilter()),
     ),
   );
   readonly ordered = computed(() =>
     [...this.filtered()].sort((a, b) => a.startAt.localeCompare(b.startAt)),
   );
-  readonly pages = computed(() => Math.max(1, Math.ceil(this.filtered().length / 20)));
-  readonly paged = computed(() => this.ordered().slice(this.page() * 20, this.page() * 20 + 20));
+  readonly pages = computed(() => Math.max(1, Math.ceil(this.filtered().length / 10)));
+  readonly paged = computed(() => this.ordered().slice(this.page() * 10, this.page() * 10 + 10));
   constructor() {
     void this.load();
   }
   resourceName(id: string): string {
     return this.resources().find((resource) => resource.id === id)?.name ?? id;
   }
+  private requestVersion = 0;
   async load() {
+    const version = ++this.requestVersion;
     this.loading.set(true);
     this.error.set(null);
     try {
@@ -235,10 +262,12 @@ export class BookingsPage {
         firstValueFrom(bookingsRequest),
         firstValueFrom(resourcesRequest),
       ]);
+      if (version !== this.requestVersion) return;
       this.bookings.set(bookings);
       this.resources.set(resources);
       this.page.set(Math.min(this.page(), this.pages() - 1));
     } catch (error) {
+      if (version !== this.requestVersion) return;
       this.error.set(
         error instanceof Error && error.message === 'invalid-date-range'
           ? {
@@ -250,8 +279,29 @@ export class BookingsPage {
           : apiError(error),
       );
     } finally {
-      this.loading.set(false);
+      if (version === this.requestVersion) this.loading.set(false);
     }
+  }
+  async calendarRange(range: { from: string; to: string }) {
+    this.from.set(range.from);
+    this.to.set(range.to);
+    this.page.set(0);
+    await this.updateUrl();
+    await this.load();
+  }
+  setPage(page: number) {
+    this.page.set(page);
+    void this.updateUrl();
+  }
+  setResourceFilter(event: Event) {
+    this.resourceFilter.set((event.target as HTMLSelectElement).value);
+    this.page.set(0);
+    void this.updateUrl();
+  }
+  setStatusFilter(event: Event) {
+    this.statusFilter.set((event.target as HTMLSelectElement).value);
+    this.page.set(0);
+    void this.updateUrl();
   }
   setFrom(event: Event) {
     this.from.set((event.target as HTMLInputElement).value);
@@ -266,7 +316,7 @@ export class BookingsPage {
   updateUrl() {
     return this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { from: this.from(), to: this.to() },
+      queryParams: { ...this.viewQuery(), page: this.page() },
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
@@ -274,13 +324,13 @@ export class BookingsPage {
 }
 @Component({
   selector: 'app-booking-create-page',
-  imports: [RouterLink, EditorComponent, ErrorComponent, StatusComponent],
+  imports: [PaginationComponent, RouterLink, EditorComponent, ErrorComponent, StatusComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <header class="page-header">
       <div>
         <p class="eyebrow">Reservas / Crear</p>
         <h1 tabindex="-1">Nueva reserva</h1>
-        <p>La disponibilidad del servidor determina los horarios reservables.</p>
+        <p>Elige un recurso y encuentra un horario disponible.</p>
       </div>
       <a routerLink="/bookings">Volver a reservas</a>
     </header>
@@ -312,7 +362,7 @@ export class BookingsPage {
           <app-status message="No hay horarios disponibles. Elige otra fecha o recurso." />
         } @else {
           <ul class="slot-list">
-            @for (slot of slots(); track slot.startAt) {
+            @for (slot of pagedSlots(); track slot.startAt) {
               <li>
                 <button [disabled]="busy()" (click)="reserve(slot)">
                   <strong>{{ format(slot.startAt) }}</strong
@@ -323,6 +373,14 @@ export class BookingsPage {
             }
           </ul>
         }
+        <app-pagination
+          [total]="slots().length"
+          [page]="slotPage()"
+          [size]="12"
+          [busy]="loading() || busy()"
+          label="Paginación de horarios disponibles"
+          (pageChange)="slotPage.set($event)"
+        />
       </section>
     }`,
 })
@@ -365,6 +423,10 @@ export class BookingCreatePage {
   };
   readonly resources = signal<Resource[]>([]);
   readonly slots = signal<Slot[]>([]);
+  readonly slotPage = signal(0);
+  readonly pagedSlots = computed(() =>
+    this.slots().slice(this.slotPage() * 12, this.slotPage() * 12 + 12),
+  );
   readonly loading = signal(true);
   readonly busy = signal(false);
   readonly queried = signal(false);
@@ -415,6 +477,7 @@ export class BookingCreatePage {
     }
     this.request = { ...values };
     this.slots.set([]);
+    this.slotPage.set(0);
     this.queried.set(true);
     this.loading.set(true);
     this.error.set(null);
@@ -435,6 +498,7 @@ export class BookingCreatePage {
     ) {
       this.request = null;
       this.slots.set([]);
+      this.slotPage.set(0);
       this.queried.set(false);
       return;
     }

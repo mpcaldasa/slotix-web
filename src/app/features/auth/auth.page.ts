@@ -58,8 +58,8 @@ import { AuthService } from './auth.service';
       </div>
     </section>
     <section class="auth-panel">
-      <h1 tabindex="-1">{{ title }}</h1>
-      <p class="muted">{{ description }}</p>
+      <h1 tabindex="-1">{{ success() ? successTitle : title }}</h1>
+      <p class="muted">{{ success() ? successDescription : description }}</p>
       @if (session.notice()) {
         <p class="notice" role="status">{{ session.notice() }}</p>
       }
@@ -67,12 +67,20 @@ import { AuthService } from './auth.service';
       @if (success()) {
         <section class="panel" role="status">
           <p>{{ success() }}</p>
-          <a routerLink="/login">Ir al acceso de compañía</a>
+          <a
+            class="button primary"
+            routerLink="/login"
+            [state]="
+              invitedCompany() ? { companyId: invitedCompany(), email: invitedEmail() } : undefined
+            "
+            >Entrar a mi cuenta</a
+          >
         </section>
       } @else {
         <app-editor
           id="auth"
           [fields]="fields"
+          [values]="initialValues"
           [busy]="busy()"
           [submitLabel]="button"
           (saved)="submit($event)"
@@ -101,6 +109,10 @@ export class AuthPage {
   readonly success = signal('');
   readonly editor = viewChild(EditorComponent);
   private readonly token = this.route.snapshot.queryParamMap.get('token') ?? '';
+  readonly companyFromLink = (() => {
+    const id = this.contextValue('companyId');
+    return id && new RegExp(UUID_PATTERN).test(id) ? id : null;
+  })();
   readonly title =
     this.mode === 'platform'
       ? 'Acceso de plataforma'
@@ -111,14 +123,28 @@ export class AuthPage {
           : this.mode === 'invitation'
             ? 'Aceptar invitación'
             : 'Accede a tu compañía';
+  readonly successTitle =
+    this.mode === 'invitation'
+      ? '¡Tu cuenta está lista!'
+      : this.mode === 'reset'
+        ? 'Contraseña actualizada'
+        : 'Revisa tu correo';
+  readonly successDescription =
+    this.mode === 'invitation'
+      ? 'Ya puedes entrar y empezar a organizar tus reservas.'
+      : this.mode === 'reset'
+        ? 'Entra con tu nueva contraseña para continuar.'
+        : 'Si no encuentras el mensaje, revisa la carpeta de correo no deseado.';
   readonly description =
     this.mode === 'company'
-      ? 'Ingresa el identificador único de tu compañía y tus datos de acceso.'
+      ? this.companyFromLink
+        ? 'Tu compañía ya está seleccionada. Ingresa tu correo y contraseña para continuar.'
+        : 'Ingresa el código de tu compañía y tus datos de acceso.'
       : this.mode === 'platform'
         ? 'Administración global de compañías y usuarios.'
         : this.mode === 'recover'
           ? 'Solicita instrucciones para recuperar tu acceso.'
-          : 'Usa el enlace que recibiste por correo. La contraseña debe tener entre 8 y 72 caracteres y hasta 72 bytes UTF-8.';
+          : 'Estás a un paso de comenzar. Elige una contraseña de entre 8 y 72 caracteres para proteger tu cuenta.';
   readonly button = ['company', 'platform'].includes(this.mode)
     ? 'Iniciar sesión'
     : this.mode === 'recover'
@@ -126,13 +152,20 @@ export class AuthPage {
       : this.mode === 'reset'
         ? 'Guardar contraseña'
         : 'Aceptar invitación';
+  readonly invitedCompany = signal<string | null>(null);
+  readonly invitedEmail = signal<string | null>(null);
+  readonly initialValues = { email: this.contextValue('email') ?? '' };
   readonly fields: Field[] = this.makeFields();
   constructor() {
     if (this.token) history.replaceState(history.state, '', location.pathname);
   }
+  private contextValue(key: string): string | null {
+    const value: unknown = history.state?.[key] ?? this.route.snapshot.queryParamMap.get(key);
+    return typeof value === 'string' ? value : null;
+  }
   private makeFields(): Field[] {
     const fields: Field[] = [];
-    if (this.mode === 'company')
+    if (this.mode === 'company' && !this.companyFromLink)
       fields.push({
         key: 'companyId',
         label: 'Identificador único de tu compañía',
@@ -173,11 +206,11 @@ export class AuthPage {
     if (['reset', 'invitation'].includes(this.mode) && !this.token)
       fields.unshift({
         key: 'token',
-        label: 'Token del enlace',
+        label: 'Código de invitación o recuperación',
         type: 'password',
         required: true,
         maxLength: 128,
-        hint: 'Abre el enlace del correo o ingresa el token recibido.',
+        hint: 'Abre el enlace que te enviamos por correo. Si lo necesitas, pega aquí el código del enlace.',
       });
     return fields;
   }
@@ -190,7 +223,12 @@ export class AuthPage {
     this.error.set(null);
     try {
       if (['company', 'platform'].includes(this.mode)) {
-        const response = await firstValueFrom(this.service.login(this.mode === 'company', data));
+        const response = await firstValueFrom(
+          this.service.login(this.mode === 'company', {
+            ...data,
+            ...(this.companyFromLink ? { companyId: this.companyFromLink } : {}),
+          }),
+        );
         this.session.accept(response.token);
         this.editor()?.markSaved();
         await this.router.navigateByUrl(
@@ -207,8 +245,10 @@ export class AuthPage {
         const response = await firstValueFrom(
           this.service.accept(this.token || data['token'], data['password'], data['fullName']),
         );
+        this.invitedCompany.set(response.companyId ?? null);
+        this.invitedEmail.set(response.email ?? null);
         this.success.set(
-          `Invitación aceptada. El identificador único de tu compañía es ${response.companyId}. Inicia sesión para continuar.`,
+          `¡Hola, ${response.fullName}! Tu cuenta ya está lista. Inicia sesión para empezar a organizar tus reservas.`,
         );
       }
       this.editor()?.markSaved();

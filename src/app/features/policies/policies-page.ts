@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import { PaginationComponent } from '../../shared/pagination';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { PoliciesApi } from './policies-api';
 import type { ApiError, Policy, PolicyInput } from '../../core/models';
@@ -95,7 +103,7 @@ export function policyBody(v: Record<string, string>): PolicyInput {
 }
 @Component({
   selector: 'app-policies-page',
-  imports: [EditorComponent, ErrorComponent, StatusComponent],
+  imports: [PaginationComponent, EditorComponent, ErrorComponent, StatusComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <header class="page-header">
       <div>
@@ -151,7 +159,7 @@ export function policyBody(v: Record<string, string>): PolicyInput {
               </tr>
             </thead>
             <tbody>
-              @for (policy of items(); track policy.id) {
+              @for (policy of pagedItems(); track policy.id) {
                 <tr>
                   <td>{{ policy.name }}</td>
                   <td>
@@ -179,6 +187,13 @@ export function policyBody(v: Record<string, string>): PolicyInput {
           </table>
         </div>
       }
+      <app-pagination
+        [total]="items().length"
+        [page]="page()"
+        [busy]="busy() || loading()"
+        label="Paginación de políticas"
+        (pageChange)="page.set($event)"
+      />
     </section>`,
 })
 export class PoliciesPage {
@@ -188,6 +203,9 @@ export class PoliciesPage {
   readonly fields = policyFields;
   readonly editor = viewChild(EditorComponent);
   readonly items = signal<Policy[]>([]);
+  readonly page = signal(0);
+  readonly pages = computed(() => Math.max(1, Math.ceil(this.items().length / 10)));
+  readonly pagedItems = computed(() => this.items().slice(this.page() * 10, this.page() * 10 + 10));
   readonly loading = signal(true);
   readonly busy = signal(false);
   readonly error = signal<ApiError | null>(null);
@@ -202,6 +220,7 @@ export class PoliciesPage {
     this.error.set(null);
     try {
       this.items.set(await firstValueFrom(this.api.list()));
+      this.page.set(Math.min(this.page(), this.pages() - 1));
     } catch (error) {
       this.error.set(apiError(error));
     } finally {

@@ -35,7 +35,7 @@ import { ResourceAssignments } from '../policies/resource-assignments';
       <div>
         <p class="eyebrow">Compañía / Recursos / Detalle</p>
         <h1>{{ resource()?.name ?? 'Recurso' }}</h1>
-        <p>{{ resource()?.id }}</p>
+        <p>Administra la disponibilidad y las condiciones de reserva de este recurso.</p>
       </div>
       <a routerLink="/resources">Volver a recursos</a>
     </header>
@@ -65,6 +65,8 @@ import { ResourceAssignments } from '../policies/resource-assignments';
               {{ edit() ? 'Cerrar edición' : 'Editar recurso' }}</button
             ><button
               [disabled]="busy()"
+              [class.success]="item.status !== 'ACTIVE'"
+              [class.warning]="item.status === 'ACTIVE'"
               (click)="state(item.status === 'ACTIVE' ? 'deactivate' : 'activate')"
             >
               {{ item.status === 'ACTIVE' ? 'Desactivar' : 'Activar' }}</button
@@ -82,9 +84,20 @@ import { ResourceAssignments } from '../policies/resource-assignments';
           />
         }
       </section>
-      <app-resource-schedule [resourceId]="item.id" /><app-resource-assignments
-        [resourceId]="item.id"
-      />
+      <nav class="resource-tabs" aria-label="Configuración del recurso">
+        <button [attr.aria-pressed]="section() === 'schedule'" (click)="section.set('schedule')">
+          Horarios y bloqueos
+        </button>
+        <button [attr.aria-pressed]="section() === 'policies'" (click)="section.set('policies')">
+          Políticas asignadas
+        </button>
+      </nav>
+      <div [hidden]="section() !== 'schedule'">
+        <app-resource-schedule [resourceId]="item.id" />
+      </div>
+      <div [hidden]="section() !== 'policies'">
+        <app-resource-assignments [resourceId]="item.id" />
+      </div>
     }
     <button [disabled]="loading() || busy()" (click)="load()">Actualizar recurso</button>`,
 })
@@ -96,6 +109,7 @@ export class ResourceDetailPage {
   private readonly feedback = inject(Feedback);
   readonly session = inject(Session);
   readonly resource = signal<Resource | null>(null);
+  readonly section = signal<'schedule' | 'policies'>('schedule');
   readonly loading = signal(true);
   readonly busy = signal(false);
   readonly error = signal<ApiError | null>(null);

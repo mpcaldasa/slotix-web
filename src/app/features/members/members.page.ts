@@ -194,7 +194,7 @@ export class MembersPage {
               required: true,
               maxLength: 72,
               validators: [passwordBytes],
-              hint: '8 a 72 caracteres; máximo 72 bytes UTF-8.',
+              hint: 'Usa entre 8 y 72 caracteres. Puedes pegar una contraseña de tu gestor.',
               autocomplete: 'new-password',
             },
           ]

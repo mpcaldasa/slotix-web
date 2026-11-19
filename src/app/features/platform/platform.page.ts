@@ -1,4 +1,5 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { PaginationComponent } from '../../shared/pagination';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import type { ApiError, Company, Page, PlatformUser, Schema } from '../../core/models';
@@ -43,13 +44,13 @@ const identityFields: Field[] = [
     type: 'password',
     maxLength: 72,
     validators: [passwordBytes],
-    hint: '8 a 72 caracteres y máximo 72 bytes UTF-8.',
+    hint: 'Usa una contraseña de entre 8 y 72 caracteres.',
     autocomplete: 'new-password',
   },
 ];
 @Component({
   selector: 'app-platform-page',
-  imports: [RouterLink, EditorComponent, ErrorComponent, StatusComponent],
+  imports: [PaginationComponent, RouterLink, EditorComponent, ErrorComponent, StatusComponent],
   template: `
     <header class="page-header">
       <div>
@@ -185,11 +186,10 @@ const identityFields: Field[] = [
               </tr>
             </thead>
             <tbody>
-              @for (company of companies(); track company.id) {
+              @for (company of pagedCompanies(); track company.id) {
                 <tr>
                   <td>
-                    {{ company.displayName
-                    }}<small>{{ company.legalName }} · {{ company.slug }}</small
+                    {{ company.displayName }}<small>{{ company.legalName }}</small
                     ><small>{{ company.id }}</small
                     ><small>{{ company.contactEmail }}</small>
                   </td>
@@ -216,6 +216,13 @@ const identityFields: Field[] = [
             </tbody>
           </table>
         </div>
+        <app-pagination
+          [total]="companies().length"
+          [page]="page()"
+          [busy]="loading() || busy()"
+          label="Paginación de compañías"
+          (pageChange)="companyPage($event)"
+        />
       </section>
     }
   `,
@@ -230,6 +237,10 @@ export class PlatformPage {
     this.route.snapshot.url.some((segment) => segment.path === 'users') ||
     this.router.url.startsWith('/platform/users');
   readonly companies = signal<Company[]>([]);
+  readonly companyPages = computed(() => Math.max(1, Math.ceil(this.companies().length / 10)));
+  readonly pagedCompanies = computed(() =>
+    this.companies().slice(this.page() * 10, this.page() * 10 + 10),
+  );
   readonly users = signal<Page<PlatformUser>>({
     items: [],
     page: 0,
@@ -257,7 +268,10 @@ export class PlatformPage {
     this.error.set(null);
     try {
       if (this.usersMode) this.users.set(await firstValueFrom(this.service.users(this.page())));
-      else this.companies.set(await firstValueFrom(this.service.companies()));
+      else {
+        this.companies.set(await firstValueFrom(this.service.companies()));
+        this.page.set(Math.min(this.page(), this.companyPages() - 1));
+      }
     } catch (error) {
       this.error.set(apiError(error));
     } finally {
@@ -403,6 +417,14 @@ export class PlatformPage {
     } finally {
       this.busy.set(false);
     }
+  }
+  async companyPage(page: number) {
+    this.page.set(page);
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page },
+      queryParamsHandling: 'merge',
+    });
   }
   async paginate(delta: number) {
     this.page.update((page) => page + delta);

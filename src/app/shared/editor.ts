@@ -167,7 +167,7 @@ export class EditorComponent {
   errorText(key: string): string {
     const error = this.form.controls[key]?.errors;
     return error?.['passwordBytes']
-      ? 'La contraseña no puede superar 72 bytes UTF-8.'
+      ? 'Esta contraseña es demasiado larga. Prueba con una más corta.'
       : error?.['required']
         ? 'Completa este campo.'
         : error?.['email']

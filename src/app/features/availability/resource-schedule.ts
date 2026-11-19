@@ -1,6 +1,8 @@
+import { PaginationComponent } from '../../shared/pagination';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
@@ -54,7 +56,7 @@ const blockFields: readonly Field[] = [
 ];
 @Component({
   selector: 'app-resource-schedule',
-  imports: [EditorComponent, ErrorComponent, StatusComponent],
+  imports: [PaginationComponent, EditorComponent, ErrorComponent, StatusComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <section class="panel">
     <div class="toolbar">
@@ -106,7 +108,7 @@ const blockFields: readonly Field[] = [
               </tr>
             </thead>
             <tbody>
-              @for (rule of rules(); track rule.id) {
+              @for (rule of pagedRules(); track rule.id) {
                 <tr>
                   <td>{{ weekdays[rule.weekday] }}</td>
                   <td>{{ rule.startLocalTime }}–{{ rule.endLocalTime }}</td>
@@ -133,6 +135,13 @@ const blockFields: readonly Field[] = [
           </table>
         </div>
       }
+      <app-pagination
+        [total]="rules().length"
+        [page]="rulePage()"
+        [size]="5"
+        label="Paginación de horarios"
+        (pageChange)="rulePage.set($event)"
+      />
       <div class="toolbar">
         <h3>Bloqueos</h3>
         @if (session.admin()) {
@@ -158,7 +167,7 @@ const blockFields: readonly Field[] = [
               </tr>
             </thead>
             <tbody>
-              @for (block of blocks(); track block.id) {
+              @for (block of pagedBlocks(); track block.id) {
                 <tr>
                   <td>{{ instant(block.startAt) }} → {{ instant(block.endAt) }}</td>
                   <td>{{ block.reason }}</td>
@@ -184,6 +193,13 @@ const blockFields: readonly Field[] = [
         </div>
       }
     }
+    <app-pagination
+      [total]="blocks().length"
+      [page]="blockPage()"
+      [size]="5"
+      label="Paginación de bloqueos"
+      (pageChange)="blockPage.set($event)"
+    />
   </section>`,
 })
 export class ResourceSchedule {
@@ -197,6 +213,14 @@ export class ResourceSchedule {
   readonly ruleFields = ruleFields;
   readonly blockFields = blockFields;
   readonly weekdays = weekdays;
+  readonly rulePage = signal(0);
+  readonly blockPage = signal(0);
+  readonly pagedRules = computed(() =>
+    this.rules().slice(this.rulePage() * 5, this.rulePage() * 5 + 5),
+  );
+  readonly pagedBlocks = computed(() =>
+    this.blocks().slice(this.blockPage() * 5, this.blockPage() * 5 + 5),
+  );
   readonly label = label;
   readonly rules = signal<Rule[]>([]);
   readonly blocks = signal<Block[]>([]);
@@ -225,6 +249,8 @@ export class ResourceSchedule {
       ]);
       this.rules.set(rules);
       this.blocks.set(blocks);
+      this.rulePage.set(Math.min(this.rulePage(), Math.max(0, Math.ceil(rules.length / 5) - 1)));
+      this.blockPage.set(Math.min(this.blockPage(), Math.max(0, Math.ceil(blocks.length / 5) - 1)));
     } catch (error) {
       this.error.set(apiError(error));
     } finally {

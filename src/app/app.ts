@@ -25,6 +25,7 @@ export class App {
   private readonly api = inject(Api);
   constructor() {
     let signedIn = false;
+    let lastPath = '';
     effect(() => {
       const identity = this.session.identity();
       if (signedIn && !identity) {
@@ -42,7 +43,13 @@ export class App {
         let route = this.router.routerState.snapshot.root;
         while (route.firstChild) route = route.firstChild;
         document.title = `${String(route.data['title'] ?? 'Slotix')} · Slotix`;
-        setTimeout(() => document.querySelector<HTMLElement>('#main h1')?.focus(), 0);
+        const path = this.router.url.split('?')[0];
+        if (path === lastPath) return;
+        lastPath = path;
+        setTimeout(() => {
+          document.querySelector<HTMLElement>('#main h1')?.focus({ preventScroll: true });
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }, 0);
       });
   }
   async logout(): Promise<void> {

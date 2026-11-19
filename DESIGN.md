@@ -29,32 +29,7 @@ typography:
     lineHeight: '1.2'
   code:
     fontFamily: 'Fira Code, ui-monospace, SFMono-Regular, monospace'
-  sizes:
-    [
-      '0.67rem',
-      '0.69rem',
-      '0.72rem',
-      '0.76rem',
-      '0.78rem',
-      '0.79rem',
-      '0.8rem',
-      '0.82rem',
-      '0.83rem',
-      '0.85rem',
-      '0.86rem',
-      '0.87rem',
-      '0.9rem',
-      '0.91rem',
-      '0.93rem',
-      '0.94rem',
-      '0.95rem',
-      '0.96rem',
-      '1rem',
-      '1.08rem',
-      '1.32rem',
-      '1.35rem',
-      '1.6rem',
-    ]
+
 rounded:
   control: '8px'
   panel: '14px'
@@ -92,7 +67,7 @@ Use Fira Sans for body copy, controls, and headings, with weight and size establ
 
 ## Layout
 
-At desktop sizes, a persistent navigation rail anchors the work area while its main content compensates for the rail width to stay centered in the full viewport. Tables scroll inside their own visible surface. At narrow widths, navigation moves above content, forms collapse to one column, and tables retain a labeled horizontal scroll alternative. Native date, time and select controls are deliberate: their platform popup behavior is acceptable for these administrative fields; all form labels, validation and help text remain app-owned and Spanish.
+At desktop sizes, a persistent navigation rail anchors the work area while the work area fills the remaining width, without a second sidebar-width padding. The shell background extends the navigation color through the full document; fixed navigation remains available in the viewport. Routed hosts are block elements. Tables scroll inside their own visible surface. At narrow widths, navigation moves above content, forms collapse to one column, and tables retain a labeled horizontal scroll alternative. Native date, time and select controls are deliberate: their platform popup behavior is acceptable for these administrative fields; all form labels, validation and help text remain app-owned and Spanish.
 
 ## Elevation & Depth
 
@@ -104,7 +79,9 @@ Controls use an 8px radius; panels use 14px. Status chips may be pill-shaped bec
 
 ## Components
 
-`src/styles.css` owns semantic runtime variables and global scrollbar colors. `src/app/shared/editor.ts` owns labeled form controls, validation association and busy state. `src/app/shared/dialog.ts` owns confirmation focus and keyboard behavior. Feature routes own domain-specific business choices; API types derive from the captured live OpenAPI schema in `contracts/openapi.json` through `scripts/generate-contract.mjs`.
+Runtime CSS remains canonical (Model B). The sidebar, header and full-document modal scrim use `--z-sidebar`, `--z-header` and `--z-backdrop`; native dialogs stay in the browser top layer. Button emphasis uses existing accent, success and danger semantic tokens.
+
+`src/styles.css` owns semantic runtime variables and global scrollbar colors. `src/app/shared/pagination.ts` owns range counts and local-page navigation. `src/app/features/bookings/booking-calendar.ts` owns the day/week agenda; dense weekly overlaps become an explicit count that opens the detailed day. `src/app/shared/editor.ts` owns labeled form controls, validation association and busy state. `src/app/shared/dialog.ts` owns confirmation focus and keyboard behavior. Feature routes own domain-specific business choices; API types derive from the captured live OpenAPI schema in `contracts/openapi.json` through `scripts/generate-contract.mjs`.
 
 ## Do's and Don'ts
 
@@ -113,4 +90,4 @@ Controls use an 8px radius; panels use 14px. Status chips may be pill-shaped bec
 - Use real role and reservation state labels from the backend.
 - Do not add fabricated dashboards, public listings, payment surfaces or sample bookings.
 - Keep navigation, actions, error messages and field guidance in Spanish.
-- Prefer direct, readable lists over decorative calendar widgets.
+- Calendar and list are complementary views. A timed calendar uses status colors plus text, while tables remain the compact alternative.

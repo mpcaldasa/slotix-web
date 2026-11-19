@@ -215,3 +215,41 @@ describe('booking detail route changes', () => {
     expect(detail.mock.calls.map(([id]) => id)).toEqual(['first', 'second']);
   });
 });
+
+describe('calendar request ordering', () => {
+  it('keeps the newer date range when an older read completes later', async () => {
+    const first = new Subject<Booking[]>(),
+      second = new Subject<Booking[]>();
+    const list = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: BookingsApi, useValue: { list, resources: () => of([resource]) } },
+        { provide: CONFIG, useValue: { companyTimezone: 'America/Bogota' } },
+        {
+          provide: Session,
+          useValue: { identity: () => ({ userId: 'customer' }), staff: () => true },
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              data: { calendar: true },
+              queryParamMap: convertToParamMap({ from: '2026-11-21', to: '2026-11-22' }),
+            },
+          },
+        },
+      ],
+    });
+    const page = TestBed.runInInjectionContext(() => new BookingsPage());
+    page.from.set('2026-11-22');
+    const latest = page.load();
+    second.next([{ ...booking, id: 'newer' }]);
+    await latest;
+    expect(page.bookings()[0]?.id).toBe('newer');
+    first.next([{ ...booking, id: 'older' }]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(page.bookings()[0]?.id).toBe('newer');
+    expect(page.loading()).toBe(false);
+  });
+});

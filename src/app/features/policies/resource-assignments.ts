@@ -1,6 +1,8 @@
+import { PaginationComponent } from '../../shared/pagination';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
@@ -21,13 +23,13 @@ import { DialogService } from '../../shared/dialog';
 type Mode = 'assign' | 'replace' | 'close';
 @Component({
   selector: 'app-resource-assignments',
-  imports: [EditorComponent, ErrorComponent, StatusComponent],
+  imports: [PaginationComponent, EditorComponent, ErrorComponent, StatusComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <section class="panel">
     <div class="toolbar">
       <div>
         <h2>Políticas asignadas</h2>
-        <p>Intervalos en {{ zone }}. Los cambios se validan contra las reservas existentes.</p>
+        <p>Intervalos en {{ zone }}. Las reservas existentes conservan sus condiciones.</p>
       </div>
       @if (session.admin()) {
         <button [disabled]="busy() || loading()" (click)="open('assign')">Asignar política</button>
@@ -75,7 +77,7 @@ type Mode = 'assign' | 'replace' | 'close';
             </tr>
           </thead>
           <tbody>
-            @for (assignment of items(); track assignment.effectiveFrom) {
+            @for (assignment of pagedItems(); track assignment.effectiveFrom) {
               <tr>
                 <td>{{ policyName(assignment.policyId) }}</td>
                 <td>{{ instant(assignment.effectiveFrom) }}</td>
@@ -107,6 +109,14 @@ type Mode = 'assign' | 'replace' | 'close';
       </div>
     }
     <button [disabled]="busy() || loading()" (click)="load()">Actualizar asignaciones</button>
+    <app-pagination
+      [total]="items().length"
+      [page]="page()"
+      [size]="5"
+      [busy]="busy() || loading()"
+      label="Paginación de asignaciones"
+      (pageChange)="page.set($event)"
+    />
   </section>`,
 })
 export class ResourceAssignments {
@@ -119,6 +129,8 @@ export class ResourceAssignments {
   private readonly feedback = inject(Feedback);
   readonly editor = viewChild(EditorComponent);
   readonly items = signal<Assignment[]>([]);
+  readonly page = signal(0);
+  readonly pagedItems = computed(() => this.items().slice(this.page() * 5, this.page() * 5 + 5));
   readonly policies = signal<Policy[]>([]);
   readonly loading = signal(true);
   readonly busy = signal(false);
@@ -161,6 +173,7 @@ export class ResourceAssignments {
         this.session.admin() ? firstValueFrom(this.policiesApi.list()) : Promise.resolve([]),
       ]);
       this.items.set(items);
+      this.page.set(Math.min(this.page(), Math.max(0, Math.ceil(items.length / 5) - 1)));
       this.policies.set(policies);
     } catch (error) {
       this.error.set(apiError(error));

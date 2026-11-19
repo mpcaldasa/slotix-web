@@ -78,7 +78,8 @@ test('login validation, keyboard, accessibility and responsive viewport', async 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await login(page);
   await expect(page.getByText('COMPAÑÍA', { exact: true })).toBeVisible();
-  await expect(page.getByText('Usuario de compañía', { exact: true })).toBeVisible();
+  await expect(page.locator('.identity-role')).toBeVisible();
+  await expect(page.locator('.identity-role')).toContainText('Cliente');
   await expect(page.getByRole('link', { name: 'Miembros', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Políticas', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Cerrar sesión' }).click();
