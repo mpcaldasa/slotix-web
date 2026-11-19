@@ -6,6 +6,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CONFIG } from '../../core/config';
@@ -660,28 +661,31 @@ export class BookingDetailPage {
     },
   ];
   constructor() {
-    void this.load();
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.canceling.set(false);
+      this.rescheduling.set(false);
+      void this.load();
+    });
   }
   hasUnsavedChanges(): boolean {
     return this.editor()?.hasUnsavedChanges() ?? false;
   }
   async load() {
+    const id = this.route.snapshot.paramMap.get('id') ?? '';
+    this.booking.set(null);
+    this.resource.set(null);
     this.loading.set(true);
     this.error.set(null);
     try {
-      const booking = await firstValueFrom(
-        this.api.detail(this.route.snapshot.paramMap.get('id') ?? ''),
-      );
+      const booking = await firstValueFrom(this.api.detail(id));
+      const resources = await firstValueFrom(this.api.resources());
+      if (id !== this.route.snapshot.paramMap.get('id')) return;
       this.booking.set(booking);
-      this.resource.set(
-        (await firstValueFrom(this.api.resources())).find(
-          (item) => item.id === booking.resourceId,
-        ) ?? null,
-      );
+      this.resource.set(resources.find((item) => item.id === booking.resourceId) ?? null);
     } catch (error) {
-      this.error.set(apiError(error));
+      if (id === this.route.snapshot.paramMap.get('id')) this.error.set(apiError(error));
     } finally {
-      this.loading.set(false);
+      if (id === this.route.snapshot.paramMap.get('id')) this.loading.set(false);
     }
   }
   resourceName() {

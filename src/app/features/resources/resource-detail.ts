@@ -6,6 +6,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { Session } from '../../core/session';
@@ -106,7 +107,7 @@ export class ResourceDetailPage {
   readonly assignments = viewChild(ResourceAssignments);
   readonly values = signal<Record<string, string>>({});
   constructor() {
-    void this.load();
+    this.route.paramMap.pipe(takeUntilDestroyed()).subscribe(() => void this.load());
   }
   async load() {
     if (

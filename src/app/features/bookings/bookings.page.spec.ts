@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { CONFIG } from '../../core/config';
 import { Session } from '../../core/session';
 import type { Booking, BookingInput, Resource, Slot } from '../../core/models';
 import { DialogService } from '../../shared/dialog';
 import { BookingsApi } from './bookings-api';
-import { BookingCreatePage, BookingsPage } from './bookings.page';
+import { BookingCreatePage, BookingDetailPage, BookingsPage } from './bookings.page';
 
 const resource: Resource = {
   id: 'resource',
@@ -179,5 +179,39 @@ describe('booking calendar date validation', () => {
     expect(api.list).not.toHaveBeenCalled();
     expect(page.error()).not.toBeNull();
     expect(page.loading()).toBe(false);
+  });
+});
+
+describe('booking detail route changes', () => {
+  it('loads a new booking and ignores an older response after the route changes', async () => {
+    const params = new BehaviorSubject(convertToParamMap({ id: 'first' }));
+    const first = new Subject<Booking>();
+    const detail = vi.fn((id: string) => (id === 'first' ? first : of({ ...booking, id })));
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: BookingsApi, useValue: { detail, resources: () => of([resource]) } },
+        { provide: CONFIG, useValue: { companyTimezone: 'America/Bogota' } },
+        { provide: Session, useValue: {} },
+        { provide: DialogService, useValue: {} },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap: params,
+            snapshot: {
+              get paramMap() {
+                return params.value;
+              },
+            },
+          },
+        },
+      ],
+    });
+    const page = TestBed.runInInjectionContext(() => new BookingDetailPage());
+    params.next(convertToParamMap({ id: 'second' }));
+    await vi.waitFor(() => expect(page.booking()?.id).toBe('second'));
+    first.next({ ...booking, id: 'first' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(page.booking()?.id).toBe('second');
+    expect(detail.mock.calls.map(([id]) => id)).toEqual(['first', 'second']);
   });
 });
