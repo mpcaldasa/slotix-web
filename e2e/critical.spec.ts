@@ -265,3 +265,30 @@ test('logout waits for server revocation and preserves the session on failure', 
     .click();
   await expect(page.getByRole('heading', { name: 'Accede a tu compañía' })).toBeVisible();
 });
+
+test('short weekly groups fit their time windows and open the complete day', async ({ page }) => {
+  await mockApi(page);
+  const events = Array.from({ length: 6 }, (_, index) => ({
+    ...booking,
+    id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    bookingNumber: index + 1,
+    startAt: index < 3 ? '2026-10-20T13:00:00Z' : '2026-10-20T13:30:00Z',
+    endAt: index < 3 ? '2026-10-20T13:30:00Z' : '2026-10-20T14:00:00Z',
+  }));
+  await page.route('**/api/v1/calendar?**', (route) => route.fulfill({ json: events }));
+  await login(page);
+  await page.getByRole('link', { name: 'Calendario', exact: true }).first().click();
+  await page.locator('.agenda-filters summary').click();
+  await page.locator('#bookings-from').fill('2026-10-20');
+  await page.locator('#bookings-to').fill('2026-10-26');
+  await page.getByRole('button', { name: 'Actualizar', exact: true }).click();
+  await expect(page.locator('.calendar-cluster')).toHaveCount(2);
+  const first = await page.locator('.calendar-cluster').first().boundingBox();
+  const next = await page.locator('.calendar-cluster').nth(1).boundingBox();
+  expect(first).toBeTruthy();
+  expect(next).toBeTruthy();
+  expect(first!.y + first!.height).toBeLessThanOrEqual(next!.y + 1);
+  await page.locator('.calendar-cluster').first().click();
+  await expect(page.locator('.calendar-day')).toHaveCount(1);
+  await expect(page.locator('.calendar-event')).toHaveCount(6);
+});

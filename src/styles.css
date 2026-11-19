@@ -1732,14 +1732,15 @@ app-booking-calendar {
   position: absolute;
   left: 4px;
   width: calc(100% - 8px);
-  min-height: 72px;
+  min-height: 24px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 0.25rem;
-  padding: 0.5rem;
+  gap: 0;
+  padding: 4px;
   font-size: 0.78rem;
+  line-height: 1.15;
   overflow: hidden;
   border-left: 3px solid var(--accent);
 }
@@ -1845,4 +1846,12 @@ button.warning {
   .booking-calendar > p.muted {
     font-size: 0.78rem;
   }
+}
+
+.calendar-cluster small {
+  display: none;
+}
+.calendar-cluster.short strong,
+.calendar-cluster.short .cluster-colors {
+  display: none;
 }

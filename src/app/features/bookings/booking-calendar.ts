@@ -102,6 +102,7 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
                 @for (group of day.dense; track group.start) {
                   <button
                     class="calendar-cluster"
+                    [class.short]="group.end - group.start < 30"
                     [disabled]="busy()"
                     (click)="openDay(day.date)"
                     [style.top.px]="((group.start - firstHour() * 60) * 96) / 60"
