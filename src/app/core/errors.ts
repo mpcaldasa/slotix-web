@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import type { ApiError } from './models';
 const messages: Record<string, string> = {
+  CUSTOMER_NOT_FOUND: 'Esta persona ya no pertenece a la compañía. Actualiza el directorio.',
   INVALID_CREDENTIALS:
     'No se pudo iniciar sesión. Revisa tus credenciales, compañía y estado de acceso.',
   AUTHENTICATION_REQUIRED: 'Tu sesión expiró o dejó de ser válida. Inicia sesión de nuevo.',

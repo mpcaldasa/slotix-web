@@ -1,3 +1,4 @@
+import { CustomerPicker, Customer } from '../customers/customer-picker';
 import { BookingCalendar } from './booking-calendar';
 import { PaginationComponent } from '../../shared/pagination';
 import {
@@ -142,7 +143,7 @@ function dateOffset(date: string, delta: number): string {
             </caption>
             <thead>
               <tr>
-                <th scope="col">Reserva</th>
+                <th scope="col">Reserva y cliente</th>
                 <th scope="col">Fecha y hora ({{ zone }})</th>
                 <th scope="col">Recurso</th>
                 <th scope="col">Estado</th>
@@ -155,12 +156,13 @@ function dateOffset(date: string, delta: number): string {
                   <td>
                     <a [routerLink]="['/bookings', booking.id]">{{
                       booking.bookingNumber ? '#' + booking.bookingNumber : booking.id
-                    }}</a>
+                    }}</a
+                    ><small>{{ booking.customerName || 'Cliente de la compañía' }}</small>
                   </td>
                   <td>
                     {{ format(booking.startAt) }}<small>Hasta {{ format(booking.endAt) }}</small>
                   </td>
-                  <td>{{ resourceName(booking.resourceId) }}</td>
+                  <td>{{ booking.resourceName || resourceName(booking.resourceId) }}</td>
                   <td>
                     <span class="status-pill" [attr.data-status]="booking.status">{{
                       label(booking.status)
@@ -324,7 +326,14 @@ export class BookingsPage {
 }
 @Component({
   selector: 'app-booking-create-page',
-  imports: [PaginationComponent, RouterLink, EditorComponent, ErrorComponent, StatusComponent],
+  imports: [
+    CustomerPicker,
+    PaginationComponent,
+    RouterLink,
+    EditorComponent,
+    ErrorComponent,
+    StatusComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: ` <header class="page-header">
       <div>
@@ -336,6 +345,9 @@ export class BookingsPage {
     </header>
     <app-error [error]="error()" />
     <section class="panel">
+      @if (session.staff()) {
+        <app-customer-picker [disabled]="loading() || busy()" (chosen)="customer.set($event)" />
+      }
       <h2>Encuentra un horario</h2>
       <app-editor
         id="availability"
@@ -386,7 +398,8 @@ export class BookingsPage {
 })
 export class BookingCreatePage {
   private readonly api = inject(BookingsApi);
-  private readonly session = inject(Session);
+  readonly session = inject(Session);
+  readonly customer = signal<Customer | null>(null);
   private readonly config = inject(CONFIG);
   private readonly router = inject(Router);
   private readonly feedback = inject(Feedback);
@@ -404,16 +417,6 @@ export class BookingCreatePage {
       max: 1440,
       pattern: '[0-9]+',
     },
-    ...(this.session.staff()
-      ? [
-          {
-            key: 'customerUserId',
-            label: 'ID de cliente (opcional)',
-            pattern: UUID_PATTERN,
-            hint: 'Usa un identificador conocido; el backend no ofrece búsqueda de miembros para gestores.',
-          } as Field,
-        ]
-      : []),
     { key: 'notes', label: 'Notas para la reserva', type: 'textarea', maxLength: 2000 },
   ];
   readonly editor = viewChild(EditorComponent);
@@ -439,7 +442,7 @@ export class BookingCreatePage {
   }
   readonly format = (instant: string) => formatInstant(instant, this.zone);
   hasUnsavedChanges(): boolean {
-    return (this.editor()?.hasUnsavedChanges() ?? false) || this.queried();
+    return (this.editor()?.hasUnsavedChanges() ?? false) || this.queried() || !!this.customer();
   }
   async loadResources() {
     try {
@@ -519,8 +522,8 @@ export class BookingCreatePage {
       resourceId,
       startAt: slot.startAt,
       endAt: slot.endAt,
-      ...(this.session.staff() && this.request['customerUserId']
-        ? { customerUserId: this.request['customerUserId'] }
+      ...(this.session.staff() && this.customer()
+        ? { customerUserId: this.customer()!.userId }
         : {}),
       ...(this.request['notes'] ? { notes: this.request['notes'] } : {}),
     };
@@ -538,6 +541,7 @@ export class BookingCreatePage {
       this.idempotencyPayload = '';
       this.editor()?.markSaved();
       this.queried.set(false);
+      this.customer.set(null);
       this.feedback.success('Reserva creada.');
       await this.router.navigate(['/bookings', booking.id]);
     } catch (error) {
@@ -569,6 +573,7 @@ export class BookingCreatePage {
       return;
     this.editor()?.markSaved();
     this.queried.set(false);
+    this.customer.set(null);
     await this.router.navigateByUrl('/bookings');
   }
 }
@@ -617,7 +622,7 @@ export class BookingCreatePage {
           </div>
           <div>
             <dt>Cliente</dt>
-            <dd>{{ item.customerUserId }}</dd>
+            <dd>{{ item.customerName || 'Cliente de la compañía' }}</dd>
           </div>
           <div>
             <dt>Notas</dt>
@@ -753,7 +758,7 @@ export class BookingDetailPage {
     }
   }
   resourceName() {
-    return this.resource()?.name ?? this.booking()?.resourceId ?? '—';
+    return this.booking()?.resourceName || this.resource()?.name || 'Recurso reservado';
   }
   format(value: string, zone: string) {
     return formatInstant(value, zone || this.zone);

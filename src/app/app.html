@@ -66,6 +66,15 @@
                 </svg>
                 <span>Recursos</span>
               </a>
+              @if (session.staff()) {
+                <a routerLink="/customers" routerLinkActive="active"
+                  ><svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 8h5m-2.5-2.5v5"
+                    /></svg
+                  ><span>Clientes</span></a
+                >
+              }
               @if (session.admin()) {
                 <span class="nav-section-label nav-section-spaced">Administración</span>
                 <a routerLink="/members" routerLinkActive="active">

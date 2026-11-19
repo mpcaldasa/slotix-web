@@ -71,6 +71,15 @@ export interface components {
       createdAt?: string;
       updatedAt?: string;
     };
+    CustomerProfileRequest: { phone: string; notes: string };
+    CustomerResponse: {
+      userId?: string;
+      fullName?: string;
+      email?: string;
+      phone?: string;
+      notes?: string;
+      active?: boolean;
+    };
     UpdateBookingPolicyRequest: {
       name: string;
       minDurationMinutes?: number;
@@ -126,6 +135,8 @@ export interface components {
       completedBy?: string;
       noShowAt?: string;
       noShowBy?: string;
+      customerName?: string;
+      resourceName?: string;
     };
     CreateResourceRequest: {
       name: string;
@@ -261,6 +272,20 @@ export interface components {
     AvailabilitySlot: { startAt?: string; endAt?: string };
     MembershipPageResponse: {
       items?: Array<components['schemas']['MembershipResponse']>;
+      page?: number;
+      size?: number;
+      totalElements?: number;
+      totalPages?: number;
+    };
+    CustomerPageResponse: {
+      items?: Array<components['schemas']['CustomerResponse']>;
+      page?: number;
+      size?: number;
+      totalElements?: number;
+      totalPages?: number;
+    };
+    BookingPageResponse: {
+      items?: Array<components['schemas']['BookingResponse']>;
       page?: number;
       size?: number;
       totalElements?: number;

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { PaginationComponent } from '../../shared/pagination';
 import { RouterLink } from '@angular/router';
 import type { Booking, Resource } from '../../core/models';
 import { dateInZone, formatInstant } from '../../core/time';
@@ -7,17 +8,25 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
 
 @Component({
   selector: 'app-booking-calendar',
-  imports: [RouterLink],
+  imports: [RouterLink, PaginationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="booking-calendar" aria-label="Calendario de reservas por hora">
       <div class="calendar-toolbar">
         <div class="actions">
-          <button aria-label="Período anterior" [disabled]="busy()" (click)="move(-days().length)">
+          <button
+            aria-label="Período anterior"
+            [disabled]="busy()"
+            (click)="move(resourceView() ? -1 : -days().length)"
+          >
             ‹ Anterior
           </button>
           <button [disabled]="busy()" (click)="today()">Hoy</button>
-          <button aria-label="Período siguiente" [disabled]="busy()" (click)="move(days().length)">
+          <button
+            aria-label="Período siguiente"
+            [disabled]="busy()"
+            (click)="move(resourceView() ? 1 : days().length)"
+          >
             Siguiente ›
           </button>
         </div>
@@ -25,7 +34,7 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
         <div class="view-switcher" role="group" aria-label="Tamaño del calendario">
           <button
             [disabled]="busy()"
-            [attr.aria-pressed]="mode() === 'day'"
+            [attr.aria-pressed]="mode() === 'day' && !resourceView()"
             (click)="changeMode('day')"
           >
             Día
@@ -37,8 +46,29 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
           >
             Semana
           </button>
+          <button
+            [disabled]="busy()"
+            [attr.aria-pressed]="resourceView()"
+            (click)="showResources()"
+          >
+            Por recurso
+          </button>
         </div>
       </div>
+      @if (resourceView()) {
+        <p>
+          Compara las reservas del {{ heading() }} por recurso. Un espacio vacío no garantiza
+          disponibilidad; consulta un horario para reservar.
+        </p>
+        <app-pagination
+          [total]="resources().length"
+          [page]="resourcePage()"
+          [size]="4"
+          [busy]="busy()"
+          label="Paginación de recursos del calendario"
+          (pageChange)="resourcePage.set($event)"
+        />
+      }
       <div class="calendar-legend" aria-label="Colores de estado">
         @for (status of states; track status) {
           <span class="calendar-key" [attr.data-status]="status"
@@ -67,7 +97,7 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
           [style.grid-template-columns]="'64px repeat(' + days().length + ', minmax(120px, 1fr))'"
         >
           <div class="calendar-day-heading calendar-time-heading">Hora</div>
-          @for (day of days(); track day.date) {
+          @for (day of days(); track day.key) {
             <button
               type="button"
               [disabled]="busy()"
@@ -76,8 +106,10 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
               class="calendar-day-heading"
               [class.is-today]="day.date === currentDate"
             >
-              <span>{{ weekday(day.date) }}</span
-              ><strong>{{ dayNumber(day.date) }}</strong>
+              <span>{{
+                resourceView() ? weekday(day.date) + ' ' + dayNumber(day.date) : weekday(day.date)
+              }}</span
+              ><strong>{{ day.name || dayNumber(day.date) }}</strong>
               <small
                 >{{ day.events.length }}
                 {{ day.events.length === 1 ? 'reserva' : 'reservas' }}</small
@@ -91,11 +123,11 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
               >
             }
           </div>
-          @for (day of days(); track day.date) {
+          @for (day of days(); track day.key) {
             <div
               class="calendar-day"
               role="group"
-              [attr.aria-label]="weekday(day.date) + ' ' + day.date"
+              [attr.aria-label]="(day.name || weekday(day.date)) + ' ' + day.date"
               [style.height.px]="height()"
             >
               @if (mode() === 'week') {
@@ -137,7 +169,10 @@ import { calendarDate, calendarEvents, denseCalendarGroups } from './calendar-la
                     <strong
                       >{{ time(event.booking.startAt) }}–{{ time(event.booking.endAt) }}</strong
                     >
-                    <span>{{ resourceName(event.booking.resourceId) }}</span>
+                    <span>{{ event.booking.customerName || 'Cliente de la compañía' }}</span
+                    ><span>{{
+                      event.booking.resourceName || resourceName(event.booking.resourceId)
+                    }}</span>
                     <small
                       >#{{ event.booking.bookingNumber }} · {{ label(event.booking.status) }}</small
                     >
@@ -159,6 +194,8 @@ export class BookingCalendar {
   readonly busy = input(false);
   readonly rangeChange = output<{ from: string; to: string }>();
   readonly to = input.required<string>();
+  readonly resourceView = signal(false);
+  readonly resourcePage = signal(0);
   readonly mode = computed(() => (this.from() === this.to() ? 'day' : 'week'));
   readonly label = label;
   readonly states = [
@@ -172,8 +209,25 @@ export class BookingCalendar {
     'NO_SHOW',
   ];
   readonly currentDate = dateInZone(new Date().toISOString(), this.zone());
-  readonly days = computed(() =>
-    Array.from(
+  readonly days = computed(() => {
+    if (this.resourceView())
+      return this.resources()
+        .slice(this.resourcePage() * 4, this.resourcePage() * 4 + 4)
+        .map((resource) => {
+          const events = calendarEvents(
+            this.bookings().filter((booking) => booking.resourceId === resource.id),
+            this.from(),
+            this.zone(),
+          );
+          return {
+            key: resource.id,
+            name: resource.name,
+            date: this.from(),
+            events,
+            dense: denseCalendarGroups(events),
+          };
+        });
+    return Array.from(
       {
         length: Math.max(
           1,
@@ -183,10 +237,10 @@ export class BookingCalendar {
       (_, offset) => {
         const date = calendarDate(this.from(), offset);
         const events = calendarEvents(this.bookings(), date, this.zone());
-        return { date, events, dense: denseCalendarGroups(events) };
+        return { key: date, name: '', date, events, dense: denseCalendarGroups(events) };
       },
-    ),
-  );
+    );
+  });
   readonly visibleCount = computed(
     () => new Set(this.days().flatMap((day) => day.events.map((event) => event.booking.id))).size,
   );
@@ -246,7 +300,13 @@ export class BookingCalendar {
   today() {
     this.emitRange(dateInZone(new Date().toISOString(), this.zone()));
   }
+  showResources() {
+    this.resourceView.set(true);
+    this.resourcePage.set(0);
+    this.rangeChange.emit({ from: this.from(), to: this.from() });
+  }
   changeMode(mode: 'day' | 'week') {
+    this.resourceView.set(false);
     this.rangeChange.emit({
       from: this.from(),
       to: calendarDate(this.from(), mode === 'day' ? 0 : 6),

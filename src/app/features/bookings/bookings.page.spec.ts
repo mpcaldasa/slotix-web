@@ -146,8 +146,9 @@ describe('booking creation component', () => {
 
   it('offers customer assignment only to staff', async () => {
     await setup('BOOKING_MANAGER');
+    expect(fixture.nativeElement.querySelector('app-customer-picker')).not.toBeNull();
     expect(fixture.componentInstance.fields.some((field) => field.key === 'customerUserId')).toBe(
-      true,
+      false,
     );
   });
 });

@@ -2,7 +2,8 @@ import type { components } from './openapi';
 export type Schema<N extends keyof components['schemas']> = components['schemas'][N];
 export type Complete<N extends keyof components['schemas']> = Required<Schema<N>>;
 export type Resource = Complete<'ResourceResponse'>;
-export type Booking = Complete<'BookingResponse'>;
+export type Booking = Omit<Complete<'BookingResponse'>, 'customerName' | 'resourceName'> &
+  Pick<Schema<'BookingResponse'>, 'customerName' | 'resourceName'>;
 export type Policy = Complete<'BookingPolicyResponse'>;
 export type Membership = Complete<'MembershipResponse'>;
 export type Company = Complete<'CompanyResponse'>;

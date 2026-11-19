@@ -96,6 +96,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/resources/resources-page').then((m) => m.ResourcesPage),
   },
   {
+    path: 'customers',
+    ...authenticated,
+    canDeactivate: [unsavedGuard],
+    data: { context: 'company', roles: ['COMPANY_ADMIN', 'BOOKING_MANAGER'], title: 'Clientes' },
+    loadComponent: () => import('./features/customers/customers.page').then((m) => m.CustomersPage),
+  },
+  {
     path: 'members',
     ...authenticated,
     canDeactivate: [unsavedGuard],
