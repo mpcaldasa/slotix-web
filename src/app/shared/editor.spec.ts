@@ -23,6 +23,7 @@ describe('accessible typed editor', () => {
     fixture.componentInstance.form.controls['email']!.setValue('user@example.test');
     fixture.componentRef.setInput('busy', true);
     fixture.detectChanges();
+    expect(input.disabled).toBe(true);
     fixture.componentInstance.submit();
     expect(values).toEqual([]);
     fixture.componentRef.setInput('busy', false);

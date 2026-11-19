@@ -32,7 +32,7 @@ function localDate(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
 }
 function dateOffset(date: string, delta: number): string {
-  const value = new Date(`${date}T12:00:00Z`);
+  const value = localDateStart(date, 'UTC');
   value.setUTCDate(value.getUTCDate() + delta);
   return localDate(value);
 }
@@ -293,6 +293,7 @@ export class BookingsPage {
         [busy]="loading() || busy()"
         submitLabel="Consultar disponibilidad"
         (saved)="search($event)"
+        (changed)="updateRequest($event)"
         (cancelled)="cancel()"
       />
     </section>
@@ -426,8 +427,28 @@ export class BookingCreatePage {
       this.loading.set(false);
     }
   }
+  updateRequest(values: Record<string, string>) {
+    if (!this.request) return;
+    if (
+      ['resourceId', 'date', 'durationMinutes'].some((key) => values[key] !== this.request?.[key])
+    ) {
+      this.request = null;
+      this.slots.set([]);
+      this.queried.set(false);
+      return;
+    }
+    this.request = { ...values };
+  }
   async reserve(slot: Slot) {
-    if (this.busy() || !this.request) return;
+    if (
+      this.busy() ||
+      this.loading() ||
+      !this.request ||
+      !this.slots().some(
+        (available) => available.startAt === slot.startAt && available.endAt === slot.endAt,
+      )
+    )
+      return;
     const resourceId = this.request['resourceId'];
     const input = {
       resourceId,

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { CONFIG } from '../../core/config';
@@ -7,7 +7,7 @@ import { Session } from '../../core/session';
 import type { Booking, BookingInput, Resource, Slot } from '../../core/models';
 import { DialogService } from '../../shared/dialog';
 import { BookingsApi } from './bookings-api';
-import { BookingCreatePage } from './bookings.page';
+import { BookingCreatePage, BookingsPage } from './bookings.page';
 
 const resource: Resource = {
   id: 'resource',
@@ -109,10 +109,75 @@ describe('booking creation component', () => {
     expect(page.hasUnsavedChanges()).toBe(false);
   });
 
+  it('invalidates available slots when the selected date changes', async () => {
+    await setup('CUSTOMER');
+    const page = fixture.componentInstance;
+    const form = page.editor()!.form;
+    form.patchValue({ resourceId: 'resource', date: '2026-10-20', durationMinutes: '60' });
+    await page.search(form.getRawValue());
+    form.controls['date']!.setValue('2026-10-21');
+    fixture.nativeElement
+      .querySelector('#availability-date')
+      .dispatchEvent(new Event('input', { bubbles: true }));
+    expect(page.slots()).toEqual([]);
+    await page.reserve(slot);
+    expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it('uses edited notes without repeating the availability query', async () => {
+    await setup('CUSTOMER');
+    const page = fixture.componentInstance;
+    const form = page.editor()!.form;
+    form.patchValue({
+      resourceId: 'resource',
+      date: '2026-10-20',
+      durationMinutes: '60',
+      notes: 'Original',
+    });
+    await page.search(form.getRawValue());
+    form.controls['notes']!.setValue('Updated');
+    fixture.nativeElement
+      .querySelector('#availability-notes')
+      .dispatchEvent(new Event('input', { bubbles: true }));
+    await page.reserve(slot);
+    expect(api.create.mock.calls[0]?.[0].notes).toBe('Updated');
+    expect(api.availability).toHaveBeenCalledTimes(1);
+  });
+
   it('offers customer assignment only to staff', async () => {
     await setup('BOOKING_MANAGER');
     expect(fixture.componentInstance.fields.some((field) => field.key === 'customerUserId')).toBe(
       true,
     );
+  });
+});
+
+describe('booking calendar date validation', () => {
+  it('rejects an impossible end date before requesting bookings', () => {
+    const api = { list: vi.fn(), resources: vi.fn() };
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: BookingsApi, useValue: api },
+        { provide: CONFIG, useValue: { companyTimezone: 'America/Bogota' } },
+        {
+          provide: Session,
+          useValue: { identity: () => ({ userId: 'customer' }), staff: () => false },
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              data: { calendar: true },
+              queryParamMap: convertToParamMap({ from: '2026-02-01', to: '2026-02-31' }),
+            },
+          },
+        },
+      ],
+    });
+    const page = TestBed.runInInjectionContext(() => new BookingsPage());
+    expect(api.list).not.toHaveBeenCalled();
+    expect(page.error()).not.toBeNull();
+    expect(page.loading()).toBe(false);
   });
 });

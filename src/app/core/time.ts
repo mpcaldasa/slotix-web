@@ -27,7 +27,9 @@ export function explicitInstant(value: string): string {
 export function localDateStart(date: string, zone: string): Date {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (!match) throw new Error('A valid company-local date is required');
-  const target = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const target = Date.parse(`${date}T00:00:00Z`);
+  if (!Number.isFinite(target) || new Date(target).toISOString().slice(0, 10) !== date)
+    throw new Error('A valid company-local date is required');
   let candidate = target;
   for (let iteration = 0; iteration < 3; iteration += 1) {
     const parts = new Intl.DateTimeFormat('en-CA', {

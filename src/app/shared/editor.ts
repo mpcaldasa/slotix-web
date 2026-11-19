@@ -42,6 +42,8 @@ export const UUID_PATTERN =
     novalidate
     [formGroup]="form"
     (ngSubmit)="submit()"
+    (input)="changed.emit(form.getRawValue())"
+    (change)="changed.emit(form.getRawValue())"
     class="editor"
     [attr.aria-busy]="busy()"
   >
@@ -57,6 +59,7 @@ export const UUID_PATTERN =
           <select
             [id]="id() + '-' + field.key"
             [formControlName]="field.key"
+            [attr.disabled]="busy() ? '' : null"
             [attr.aria-invalid]="invalid(field.key)"
             [attr.aria-describedby]="id() + '-' + field.key + '-help'"
           >
@@ -71,6 +74,7 @@ export const UUID_PATTERN =
             rows="4"
             [id]="id() + '-' + field.key"
             [formControlName]="field.key"
+            [attr.disabled]="busy() ? '' : null"
             [attr.maxlength]="field.maxLength ?? null"
             [attr.aria-invalid]="invalid(field.key)"
             [attr.aria-describedby]="id() + '-' + field.key + '-help'"
@@ -80,6 +84,7 @@ export const UUID_PATTERN =
             <input
               [id]="id() + '-' + field.key"
               [formControlName]="field.key"
+              [attr.disabled]="busy() ? '' : null"
               [type]="
                 field.type === 'password' && revealed().has(field.key)
                   ? 'text'
@@ -96,6 +101,7 @@ export const UUID_PATTERN =
               <button
                 type="button"
                 (click)="toggle(field.key)"
+                [disabled]="busy()"
                 [attr.aria-pressed]="revealed().has(field.key)"
               >
                 {{ revealed().has(field.key) ? 'Ocultar' : 'Mostrar' }} contraseña
@@ -122,6 +128,7 @@ export class EditorComponent {
   readonly submitLabel = input('Guardar');
   readonly saved = output<Record<string, string>>();
   readonly cancelled = output<void>();
+  readonly changed = output<Record<string, string>>();
   readonly revealed = signal(new Set<string>());
   readonly form = new FormRecord<FormControl<string>>({});
   private readonly element = inject(ElementRef<HTMLElement>);
