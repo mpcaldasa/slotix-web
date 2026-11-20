@@ -27,7 +27,7 @@ jobs:
       - run: npm run test:coverage
       - run: npm run build
       - run: npm audit --omit=dev
-      - run: npm audit --audit-level=high
+      - run: npm run audit:dev
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
       - name: Serve the built application with production security headers
